@@ -10,7 +10,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "pattern": "^ia\\.(container|display|input|chart|navigation)\\.",
+          "pattern": "^ia\\.(container|display|input|chart|navigation|shapes|symbol)\\.",
           "description": "Component type must start with ia. followed by category"
         },
         "meta": {

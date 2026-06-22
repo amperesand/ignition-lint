@@ -9,7 +9,7 @@
   "properties": {
     "type": {
       "type": "string",
-      "pattern": "^ia\\.(container|display|input|chart|navigation)\\.",
+      "pattern": "^ia\\.(container|display|input|chart|navigation|shapes|symbol)\\.",
       "description": "Component type must start with ia. followed by category",
       "enum": [
         "ia.chart.gauge",
@@ -35,6 +35,7 @@
         "ia.display.led-display",
         "ia.display.markdown",
         "ia.display.moving-analog-indicator",
+        "ia.display.pdf-viewer",
         "ia.display.progress",
         "ia.display.table",
         "ia.display.tag-browse-tree",
@@ -47,6 +48,7 @@
         "ia.input.date-time-input",
         "ia.input.dropdown",
         "ia.input.fileupload",
+        "ia.input.barcodescannerinput",
         "ia.input.multi-state-button",
         "ia.input.numeric-entry-field",
         "ia.input.oneshotbutton",
@@ -56,6 +58,7 @@
         "ia.input.text-field",
         "ia.input.toggle-switch",
         "ia.navigation.horizontalmenu",
+        "ia.navigation.link",
         "ia.navigation.menutree",
         "ia.shapes.svg",
         "ia.symbol.sensor",
@@ -627,7 +630,10 @@
       "type": "object",
       "properties": {
         "customMethods": {
-          "type": "array"
+          "type": [
+            "array",
+            "null"
+          ]
         },
         "extensionFunctions": {
           "type": [

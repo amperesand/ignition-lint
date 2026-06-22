@@ -1351,9 +1351,9 @@ class TestEventWrongCategory:
         issues = _lint_view(view)
         assert "EVENT_WRONG_CATEGORY" not in _codes(issues)
 
-    def test_correct_mouse_event(self):
-        """onClick under events.mouse should not flag."""
-        view = self._make_view_with_event("mouse", "onClick")
+    def test_correct_dom_event(self):
+        """onClick under events.dom should not flag."""
+        view = self._make_view_with_event("dom", "onClick")
         issues = _lint_view(view)
         assert "EVENT_WRONG_CATEGORY" not in _codes(issues)
 
@@ -1372,38 +1372,38 @@ class TestEventWrongCategory:
         assert "system event" in matching[0].message
         assert matching[0].suggestion == "Move to events.system.onStartup"
 
-    def test_mouse_event_under_system(self):
+    def test_dom_event_under_system(self):
         """onClick under events.system should flag."""
         view = self._make_view_with_event("system", "onClick")
         issues = _lint_view(view)
         matching = [i for i in issues if i.code == "EVENT_WRONG_CATEGORY"]
         assert len(matching) == 1
-        assert "mouse event" in matching[0].message
-        assert matching[0].suggestion == "Move to events.mouse.onClick"
+        assert "dom event" in matching[0].message
+        assert matching[0].suggestion == "Move to events.dom.onClick"
 
-    def test_keyboard_event_under_mouse(self):
-        """onKeyDown under events.mouse should flag."""
-        view = self._make_view_with_event("mouse", "onKeyDown")
+    def test_dom_keyboard_event_under_component(self):
+        """onKeyDown under events.component should flag."""
+        view = self._make_view_with_event("component", "onKeyDown")
         issues = _lint_view(view)
         matching = [i for i in issues if i.code == "EVENT_WRONG_CATEGORY"]
         assert len(matching) == 1
-        assert matching[0].suggestion == "Move to events.keyboard.onKeyDown"
+        assert matching[0].suggestion == "Move to events.dom.onKeyDown"
 
-    def test_focus_event_under_component(self):
+    def test_dom_focus_event_under_component(self):
         """onBlur under events.component should flag."""
         view = self._make_view_with_event("component", "onBlur")
         issues = _lint_view(view)
         matching = [i for i in issues if i.code == "EVENT_WRONG_CATEGORY"]
         assert len(matching) == 1
-        assert matching[0].suggestion == "Move to events.focus.onBlur"
+        assert matching[0].suggestion == "Move to events.dom.onBlur"
 
-    def test_pointer_event_under_mouse(self):
-        """onPointerDown under events.mouse should flag."""
-        view = self._make_view_with_event("mouse", "onPointerDown")
+    def test_dom_pointer_event_under_system(self):
+        """onPointerDown under events.system should flag."""
+        view = self._make_view_with_event("system", "onPointerDown")
         issues = _lint_view(view)
         matching = [i for i in issues if i.code == "EVENT_WRONG_CATEGORY"]
         assert len(matching) == 1
-        assert matching[0].suggestion == "Move to events.pointer.onPointerDown"
+        assert matching[0].suggestion == "Move to events.dom.onPointerDown"
 
     def test_unknown_event_not_flagged(self):
         """Custom/unknown events should not trigger this rule."""

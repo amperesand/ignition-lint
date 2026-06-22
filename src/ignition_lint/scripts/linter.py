@@ -25,6 +25,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from ..validators.jython import _preprocess_py2
+
 
 class LintSeverity(Enum):
     ERROR = "ERROR"
@@ -250,17 +252,25 @@ class IgnitionScriptLinter:
         finally:
             self._current_suppressions = None
 
+    def _parse_jython_ast(self, content: str) -> ast.Module:
+        """Parse Ignition Jython 2.7 code with the Python 3 AST.
+
+        Ignition project scripts run on Jython 2.7, but this linter runs on
+        CPython 3 in CI. Normalize common Jython/Python 2 syntax first so valid
+        gateway scripts do not fail as Python 3 syntax errors.
+        """
+        return ast.parse(_preprocess_py2(content))
+
     def _check_syntax(self, file_path: Path, content: str):
-        """Check basic Python syntax."""
+        """Check basic Jython syntax using Python 3 AST compatibility preprocessing."""
         try:
-            # Try to parse with Python AST
-            ast.parse(content)
+            self._parse_jython_ast(content)
         except SyntaxError as e:
             self._add_issue(
                 ScriptLintIssue(
                     severity=LintSeverity.ERROR,
                     code="SYNTAX_ERROR",
-                    message=f"Python syntax error: {e.msg}",
+                    message=f"Jython syntax error: {e.msg}",
                     file_path=str(file_path),
                     line_number=e.lineno,
                     column=e.offset,
@@ -458,7 +468,7 @@ class IgnitionScriptLinter:
 
         # Check for missing docstrings in functions
         try:
-            tree = ast.parse(content)
+            tree = self._parse_jython_ast(content)
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef):
                     # Skip dunder methods and private functions

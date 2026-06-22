@@ -176,11 +176,15 @@ _SIZE_GUARD_FUNCS = {"len", "jsonLength", "rowCount", "columnCount"}
 def _skip_string(expression: str, start: int) -> tuple[int, bool]:
     """Skip from opening quote to closing quote. Returns (end_pos, closed).
 
-    Ignition expressions use single quotes for strings with no backslash escaping.
+    Perspective JSON exports commonly preserve escaped quotes in expression
+    strings, for example ``'yyyy-MM-dd\\'T\\'HH:mm:ss'``.
     ``start`` must point to the opening ``'``.
     """
     i = start + 1
     while i < len(expression):
+        if expression[i] == "\\":
+            i += 2
+            continue
         if expression[i] == "'":
             return (i, True)
         i += 1
