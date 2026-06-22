@@ -100,6 +100,7 @@ runs:
         if [ -n "${{ inputs.version }}" ]; then
           pip install "ignition-lint-toolkit==${{ inputs.version }}"
         else
+          export SETUPTOOLS_SCM_PRETEND_VERSION="0.0.0+action"
           export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_IGNITION_LINT_TOOLKIT="0.0.0+action"
           pip install "$GITHUB_ACTION_PATH"
         fi
