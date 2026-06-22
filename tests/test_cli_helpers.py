@@ -1,5 +1,5 @@
 from ignition_lint.action_entry import build_cli_args
-from ignition_lint.cli import determine_checks
+from ignition_lint.cli import configure_console_encoding, determine_checks
 from ignition_lint.json_linter import JsonLinter
 
 
@@ -74,6 +74,24 @@ def test_action_args_include_legacy_naming_only_when_requested():
         "--profile",
         "perspective-only",
         "--naming-only",
+    ]
+
+
+def test_configure_console_encoding_uses_utf8_when_available(monkeypatch):
+    calls = []
+
+    class Stream:
+        def reconfigure(self, **kwargs):
+            calls.append(kwargs)
+
+    monkeypatch.setattr("sys.stdout", Stream())
+    monkeypatch.setattr("sys.stderr", Stream())
+
+    configure_console_encoding()
+
+    assert calls == [
+        {"encoding": "utf-8", "errors": "replace"},
+        {"encoding": "utf-8", "errors": "replace"},
     ]
 
 

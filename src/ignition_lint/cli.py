@@ -27,6 +27,14 @@ PROFILE_CHECKS = {
 }
 
 
+def configure_console_encoding() -> None:
+    """Prefer UTF-8 console output for Windows hooks and agent terminals."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def check_linter_availability(schema_mode: str) -> bool:
     try:
         path = schema_path_for(schema_mode)
@@ -274,6 +282,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    configure_console_encoding()
     args = parse_args(argv)
 
     if args.check_linter:
