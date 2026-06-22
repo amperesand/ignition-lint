@@ -408,13 +408,14 @@ class JythonValidator:
                 )
             )
 
-        # Flag print statement syntax (print x) — should use print() function
+        # Flag print statement syntax (print x) as a portability style hint.
+        # It is valid in Ignition's Jython 2.7 runtime.
         if re.search(r"\bprint\s+[^(]", script):
             self.issues.append(
                 JythonIssue(
-                    severity=LintSeverity.WARNING,
+                    severity=LintSeverity.STYLE,
                     code="JYTHON_PRINT_STATEMENT",
-                    message="Print statement found - use print() function for Jython compatibility.",
+                    message="Print statement found - consider print() for cross-version portability.",
                     suggestion="Change 'print x' to 'print(x)'",
                 )
             )

@@ -161,6 +161,48 @@ jobs:
 
 [Full Action documentation →](https://TheThoughtagen.github.io/ignition-lint/integration/github-actions)
 
+#### Ampersand Ignition 8.3 enforcement
+
+For this fork, leave the `version` input blank so the action installs the
+checked-out `amperesand/ignition-lint` code instead of the upstream PyPI
+package.
+
+```yaml
+name: Ignition Lint
+on: [push, pull_request]
+
+jobs:
+  lint-pilot-line:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amperesand/ignition-lint@main
+        with:
+          project_path: projects/pilot_line
+          lint_type: all
+          naming_only: "false"
+          schema_mode: robust
+          fail_on: error
+```
+
+To lint every project in an Ignition gateway `data/` repo, use the CLI directly:
+
+```yaml
+name: Ignition Lint
+on: [push, pull_request]
+
+jobs:
+  lint-projects:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install git+https://github.com/amperesand/ignition-lint.git@main
+      - run: ignition-lint --target projects --profile full --schema-mode robust --fail-on error
+```
+
 ### 🪝 Pre-commit hooks
 
 Catch issues before they're committed:

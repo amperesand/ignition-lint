@@ -253,15 +253,17 @@ class IgnitionPerspectiveLinter:
         except ValidationError as e:
             self.issues.append(
                 LintIssue(
-                    severity=LintSeverity.ERROR,
+                    severity=LintSeverity.WARNING,
                     code="SCHEMA_VALIDATION",
                     message=f"Schema validation failed: {e.message}",
                     file_path=file_path,
                     component_path=component_path,
                     component_type=component.get("type", "unknown"),
-                    suggestion=f"Path: {'.'.join(map(str, e.absolute_path))}"
-                    if e.absolute_path
-                    else None,
+                    suggestion=(
+                        f"Path: {'.'.join(map(str, e.absolute_path))}"
+                        if e.absolute_path
+                        else None
+                    ),
                 )
             )
             return False
@@ -346,8 +348,13 @@ class IgnitionPerspectiveLinter:
                 )
             )
 
-        # Check for missing position properties in containers
-        if comp_type.startswith("ia.container.") and "children" in component:
+        # Check for missing position properties only in coordinate-like containers.
+        # Flex, column, and tab children can be valid without serialized position
+        # objects, so flagging every container creates noisy false positives.
+        if (
+            comp_type in {"ia.container.coord", "ia.container.breakpt"}
+            and "children" in component
+        ):
             children = component.get("children", [])
             for i, child in enumerate(children):
                 # Position can be static (position object) or dynamic (propConfig.position.*)
@@ -598,6 +605,7 @@ class IgnitionPerspectiveLinter:
                 "expr-struct",
                 "query",
                 "tag-history",
+                "http",
             ]
             if binding_type not in valid_binding_types:
                 self.issues.append(

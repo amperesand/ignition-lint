@@ -87,6 +87,7 @@ KNOWN_EXPRESSION_FUNCTIONS = frozenset(
         "weeksBetween",
         "yearsBetween",
         # Logic / Comparison
+        "case",
         "if",
         "switch",
         "coalesce",
@@ -121,6 +122,10 @@ KNOWN_EXPRESSION_FUNCTIONS = frozenset(
         # Color
         "chooseColor",
         "colorMix",
+        "brighter",
+        "color",
+        "darker",
+        "gradient",
         # JSON
         "jsonDecode",
         "jsonEncode",
@@ -178,17 +183,55 @@ def _skip_string(expression: str, start: int) -> tuple[int, bool]:
 
     Perspective JSON exports commonly preserve escaped quotes in expression
     strings, for example ``'yyyy-MM-dd\\'T\\'HH:mm:ss'``.
-    ``start`` must point to the opening ``'``.
+    ``start`` must point to the opening quote.
     """
+    quote = expression[start]
     i = start + 1
     while i < len(expression):
         if expression[i] == "\\":
             i += 2
             continue
-        if expression[i] == "'":
+        if expression[i] == quote:
             return (i, True)
         i += 1
     return (len(expression) - 1, False)
+
+
+def _is_quote(ch: str) -> bool:
+    return ch in {"'", '"'}
+
+
+def _skip_line_comment(expression: str, start: int) -> int:
+    """Skip a // comment and return the index after the line ending."""
+    end = expression.find("\n", start)
+    return len(expression) if end < 0 else end + 1
+
+
+def _mask_strings_and_comments(expression: str) -> str:
+    """Return expression text with strings/comments replaced by spaces.
+
+    This keeps character offsets stable for regex-based checks while ensuring
+    function-looking text inside returned strings, such as ``'rgba(...)'`` or
+    ``'url(...)'``, is not treated as Ignition expression code.
+    """
+    chars = list(expression)
+    i = 0
+    while i < len(chars):
+        if expression.startswith("//", i):
+            end = _skip_line_comment(expression, i)
+            for j in range(i, min(end, len(chars))):
+                if chars[j] != "\n":
+                    chars[j] = " "
+            i = end
+            continue
+        if _is_quote(expression[i]):
+            end, _closed = _skip_string(expression, i)
+            for j in range(i, min(end + 1, len(chars))):
+                chars[j] = " "
+            i = end + 1
+            continue
+        i += 1
+    return "".join(chars)
 
 
 class ExpressionValidator:
@@ -263,9 +306,10 @@ class ExpressionValidator:
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
         issues: list[LintIssue] = []
+        code_expression = _mask_strings_and_comments(expression)
 
         # now() with no args - defaults to 1000ms polling
-        for _m in re.finditer(r"\bnow\s*\(\s*\)", expression):
+        for _m in re.finditer(r"\bnow\s*\(\s*\)", code_expression):
             issues.append(
                 LintIssue(
                     severity=LintSeverity.WARNING,
@@ -279,7 +323,7 @@ class ExpressionValidator:
             )
 
         # now(N) with low rate
-        for m in re.finditer(r"\bnow\s*\(\s*(\d+)\s*\)", expression):
+        for m in re.finditer(r"\bnow\s*\(\s*(\d+)\s*\)", code_expression):
             rate = int(m.group(1))
             if 0 < rate < 5000:
                 issues.append(
@@ -300,8 +344,9 @@ class ExpressionValidator:
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
         issues: list[LintIssue] = []
+        code_expression = _mask_strings_and_comments(expression)
 
-        for m in _PROPERTY_REF_RE.finditer(expression):
+        for m in _PROPERTY_REF_RE.finditer(code_expression):
             ref = m.group(1).strip()
             # Skip tag paths ([Provider]Path), absolute component paths (/root/...),
             # and relative component paths (.../Component Name/...)
@@ -346,8 +391,9 @@ class ExpressionValidator:
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
         issues: list[LintIssue] = []
+        code_expression = _mask_strings_and_comments(expression)
 
-        for m in _FUNCTION_CALL_RE.finditer(expression):
+        for m in _FUNCTION_CALL_RE.finditer(code_expression):
             func_name = m.group(1)
             if func_name in _BAD_COMPONENT_REF_FUNCS:
                 continue
@@ -373,9 +419,10 @@ class ExpressionValidator:
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
         issues: list[LintIssue] = []
+        code_expression = _mask_strings_and_comments(expression)
 
         for func in _BAD_COMPONENT_REF_FUNCS:
-            if re.search(rf"\b{func}\s*\(", expression):
+            if re.search(rf"\b{func}\s*\(", code_expression):
                 issues.append(
                     LintIssue(
                         severity=LintSeverity.WARNING,
@@ -393,45 +440,31 @@ class ExpressionValidator:
     def _check_external_index_access(
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
-        """Detect array/dot access outside braces: {X}[n] or {X}[n].prop is invalid."""
-        issues: list[LintIssue] = []
+        """Compatibility placeholder for exported expressions using {X}[n].
 
-        for m in _EXTERNAL_INDEX_RE.finditer(expression):
-            prop = m.group(1).strip()
-            issues.append(
-                LintIssue(
-                    severity=LintSeverity.ERROR,
-                    code="EXPR_EXTERNAL_INDEX_ACCESS",
-                    message=(
-                        f"Array index access outside braces on '{{{prop}}}' is invalid syntax"
-                    ),
-                    file_path=file_path,
-                    component_path=component_path,
-                    component_type=component_type,
-                    suggestion=(
-                        f"Move the index inside the braces, e.g. '{{{prop}[0]}}'"
-                    ),
-                )
-            )
-
-        return issues
+        Ignition sample projects use this form in expression transforms, so it
+        must not be treated as a syntax error. Bounds-safety concerns are still
+        handled by ``EXPR_NO_SHORT_CIRCUIT``.
+        """
+        return []
 
     def _check_short_circuit_guard(
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
         """Detect guard-pattern anti-pattern: len(X) && X[n] won't short-circuit."""
         issues: list[LintIssue] = []
+        code_expression = _mask_strings_and_comments(expression)
 
         # Only relevant when && or || is present
-        if "&&" not in expression and "||" not in expression:
+        if "&&" not in code_expression and "||" not in code_expression:
             return issues
 
         # Collect base property paths that are array-indexed.
         # Handles both external {X}[n] and internal {X[n].prop} forms.
         indexed_props: set[str] = set()
-        for m in _EXTERNAL_INDEX_RE.finditer(expression):
+        for m in _EXTERNAL_INDEX_RE.finditer(code_expression):
             indexed_props.add(m.group(1).strip())
-        for m in _INTERNAL_INDEX_RE.finditer(expression):
+        for m in _INTERNAL_INDEX_RE.finditer(code_expression):
             indexed_props.add(m.group(1).strip())
 
         if not indexed_props:
@@ -440,14 +473,17 @@ class ExpressionValidator:
         # Check if any size-guard function wraps one of the same property refs
         already_reported: set[str] = set()
         for func in _SIZE_GUARD_FUNCS:
-            for m in re.finditer(rf"\b{func}\s*\(\s*\{{([^}}]+)\}}\s*\)", expression):
+            for m in re.finditer(
+                rf"\b{func}\s*\(\s*\{{([^}}]+)\}}\s*\)",
+                code_expression,
+            ):
                 guarded_prop = m.group(1).strip()
                 if (
                     guarded_prop in indexed_props
                     and guarded_prop not in already_reported
                 ):
                     already_reported.add(guarded_prop)
-                    op = "&&" if "&&" in expression else "||"
+                    op = "&&" if "&&" in code_expression else "||"
                     issues.append(
                         LintIssue(
                             severity=LintSeverity.WARNING,
@@ -477,9 +513,12 @@ class ExpressionValidator:
         last_extra_close = -1
         while i < len(expression):
             ch = expression[i]
-            if ch == "'":
+            if _is_quote(ch):
                 end, _closed = _skip_string(expression, i)
                 i = end + 1
+                continue
+            if expression.startswith("//", i):
+                i = _skip_line_comment(expression, i)
                 continue
             if ch == "{":
                 # Skip brace block — tag paths may contain parens
@@ -535,9 +574,12 @@ class ExpressionValidator:
         last_extra_close = -1
         while i < len(expression):
             ch = expression[i]
-            if ch == "'":
+            if _is_quote(ch):
                 end, _closed = _skip_string(expression, i)
                 i = end + 1
+                continue
+            if expression.startswith("//", i):
+                i = _skip_line_comment(expression, i)
                 continue
             if ch == "{":
                 depth += 1
@@ -574,11 +616,14 @@ class ExpressionValidator:
     def _check_unmatched_string_quotes(
         self, expression: str, file_path: str, component_path: str, component_type: str
     ) -> list[LintIssue]:
-        """Detect unclosed string literals (single quotes)."""
+        """Detect unclosed string literals."""
         issues: list[LintIssue] = []
         i = 0
         while i < len(expression):
-            if expression[i] == "'":
+            if expression.startswith("//", i):
+                i = _skip_line_comment(expression, i)
+                continue
+            if _is_quote(expression[i]):
                 end, closed = _skip_string(expression, i)
                 if not closed:
                     issues.append(
@@ -638,7 +683,12 @@ class ExpressionValidator:
             ch = expression[i]
 
             # --- String literal (value) ---
-            if ch == "'":
+            if expression.startswith("//", i):
+                i = _skip_line_comment(expression, i)
+                last_value_end = -1
+                continue
+
+            if _is_quote(ch):
                 if last_value_end >= 0 and not _has_operator_between(last_value_end, i):
                     _flag("string literal after value", i)
                 end, closed = _skip_string(expression, i)

@@ -44,7 +44,7 @@ jobs:
 | `schema_mode` | No | `robust` | Schema strictness: `strict`, `robust`, or `permissive` |
 | `fail_on` | No | `error` | Minimum severity that causes a non-zero exit: `error`, `warning`, `info`, `style` |
 | `component` | No | — | Filter Perspective linting to a specific component type prefix |
-| `version` | No | latest | Version of ignition-lint-toolkit to install from PyPI |
+| `version` | No | action checkout | Version of ignition-lint-toolkit to install from PyPI. Leave blank to install the checked-out action code. |
 
 ## Action Outputs
 
@@ -62,6 +62,32 @@ jobs:
     project_path: .
     lint_type: all
     naming_only: "false"
+```
+
+### Ampersand fork enforcement
+
+When using the Ampersand fork, leave `version` blank. The action will install
+the checked-out fork code, including Ampersand compatibility fixes, instead of
+the upstream PyPI package.
+
+```yaml
+- uses: amperesand/ignition-lint@main
+  with:
+    project_path: projects/pilot_line
+    lint_type: all
+    naming_only: "false"
+    schema_mode: robust
+    fail_on: error
+```
+
+For a gateway `data/` repository with many projects, run the CLI directly:
+
+```yaml
+- uses: actions/setup-python@v5
+  with:
+    python-version: "3.12"
+- run: pip install git+https://github.com/amperesand/ignition-lint.git@main
+- run: ignition-lint --target projects --profile full --schema-mode robust --fail-on error
 ```
 
 ### Naming only with acronym support
@@ -100,7 +126,7 @@ jobs:
 The action:
 
 1. Sets up Python 3.10
-2. Installs ignition-lint-toolkit from PyPI (`pip install ignition-lint-toolkit`)
+2. Installs the checked-out action code, or installs ignition-lint-toolkit from PyPI when `version` is set
 3. Runs `ignition-lint-action` with environment variables mapped from the action inputs
 4. Exits with code 0 on success or 1 on failure
 

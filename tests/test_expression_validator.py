@@ -146,19 +146,16 @@ class TestRootPropertyRef:
 
 
 class TestExternalIndexAccess:
-    def test_index_outside_braces_flagged(self, validator):
-        """{X}[1] is invalid — index must be inside braces."""
+    def test_index_outside_braces_allowed_for_exported_expressions(self, validator):
+        """Ignition sample exports use {X}[1], so it must not be a syntax error."""
         expr = "{view.params.steps}[1].complete"
         issues = validator.validate_expression(
             expr, "test", "file.json", "root", "ia.display.label"
         )
-        assert "EXPR_EXTERNAL_INDEX_ACCESS" in _codes(issues)
-        issue = next(i for i in issues if i.code == "EXPR_EXTERNAL_INDEX_ACCESS")
-        assert issue.severity.name == "ERROR"
-        assert "{view.params.steps[0]}" in issue.suggestion
+        assert "EXPR_EXTERNAL_INDEX_ACCESS" not in _codes(issues)
 
-    def test_index_outside_braces_in_if(self, validator):
-        """Full if() expression with external index is flagged."""
+    def test_index_outside_braces_in_if_allowed(self, validator):
+        """Full if() expression with external index should not be a syntax error."""
         expr = (
             "if(len({view.params.steps}) > 1 && {view.params.steps}[1].complete, "
             "'complete', 'pending')"
@@ -166,7 +163,7 @@ class TestExternalIndexAccess:
         issues = validator.validate_expression(
             expr, "test", "file.json", "root/Connector01", "ia.display.label"
         )
-        assert "EXPR_EXTERNAL_INDEX_ACCESS" in _codes(issues)
+        assert "EXPR_EXTERNAL_INDEX_ACCESS" not in _codes(issues)
 
     def test_index_inside_braces_ok(self, validator):
         """Correct syntax {X[1].complete} should not flag."""
@@ -187,7 +184,7 @@ class TestExternalIndexAccess:
 
 class TestNoShortCircuit:
     def test_len_guard_with_and_external_index(self, validator):
-        """len(X) > N && X[N] (external) should warn for both rules."""
+        """len(X) > N && X[N] should warn for non-short-circuiting only."""
         expr = (
             "if(len({view.params.steps}) > 1 && {view.params.steps}[1].complete, "
             "'complete', 'pending')"
@@ -197,7 +194,7 @@ class TestNoShortCircuit:
         )
         codes = _codes(issues)
         assert "EXPR_NO_SHORT_CIRCUIT" in codes
-        assert "EXPR_EXTERNAL_INDEX_ACCESS" in codes
+        assert "EXPR_EXTERNAL_INDEX_ACCESS" not in codes
 
     def test_len_guard_with_and_internal_index(self, validator):
         """len(X) > N && {X[N].prop} (correct syntax) still has short-circuit issue."""
@@ -509,9 +506,9 @@ class TestAdjacentExpressions:
             issues = validator.validate_expression(
                 expr, "test", "file.json", "root", "ia.display.label"
             )
-            assert "EXPR_ADJACENT_EXPRESSIONS" not in _codes(issues), (
-                f"False positive on {expr}"
-            )
+            assert "EXPR_ADJACENT_EXPRESSIONS" not in _codes(
+                issues
+            ), f"False positive on {expr}"
 
     def test_complex_valid_expression(self, validator):
         """Real-world expression with multiple tokens and operators."""

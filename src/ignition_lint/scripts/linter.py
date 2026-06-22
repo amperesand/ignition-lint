@@ -294,13 +294,14 @@ class IgnitionScriptLinter:
 
         # Check for Python 2 vs 3 incompatibilities
         for line_num, line in enumerate(lines, 1):
-            # Check for print statements (should be print functions in Jython)
+            # Check for print statements. They are valid in Ignition's Jython 2.7
+            # runtime, but function syntax is easier to migrate and lint.
             if self.python2_patterns["print_statement"].search(line):
                 self._add_issue(
                     ScriptLintIssue(
-                        severity=LintSeverity.WARNING,
+                        severity=LintSeverity.STYLE,
                         code="JYTHON_PRINT_STATEMENT",
-                        message="Print statement found - use print() function for Jython compatibility",
+                        message="Print statement found - consider print() for cross-version portability",
                         file_path=str(file_path),
                         line_number=line_num,
                         suggestion="Change 'print x' to 'print(x)'",
@@ -324,12 +325,12 @@ class IgnitionScriptLinter:
             if self.python2_patterns["iteritems"].search(line):
                 self._add_issue(
                     ScriptLintIssue(
-                        severity=LintSeverity.WARNING,
+                        severity=LintSeverity.INFO,
                         code="JYTHON_DEPRECATED_ITERITEMS",
-                        message="dict.iteritems() is deprecated - use dict.items()",
+                        message="dict.iteritems() is Python 2/Jython-specific",
                         file_path=str(file_path),
                         line_number=line_num,
-                        suggestion="Replace .iteritems() with .items()",
+                        suggestion="Use .items() only when Python 3 portability is required",
                     )
                 )
 
@@ -337,12 +338,12 @@ class IgnitionScriptLinter:
             if self.python2_patterns["string_types"].search(line):
                 self._add_issue(
                     ScriptLintIssue(
-                        severity=LintSeverity.WARNING,
+                        severity=LintSeverity.INFO,
                         code="JYTHON_STRING_TYPES",
-                        message="basestring/unicode types found - may cause compatibility issues",
+                        message="basestring/unicode types are Jython-specific",
                         file_path=str(file_path),
                         line_number=line_num,
-                        suggestion="Use str type checking for better compatibility",
+                        suggestion="Use str only when Python 3 portability is required",
                     )
                 )
 
