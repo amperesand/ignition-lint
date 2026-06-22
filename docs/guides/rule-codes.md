@@ -11,7 +11,7 @@ Every issue reported by ignition-lint has a rule code. Use these codes with `--i
 
 | Code | Severity | Description |
 |---|---|---|
-| `SCHEMA_VALIDATION` | ERROR | Component structure doesn't match the expected schema |
+| `SCHEMA_VALIDATION` | WARNING | Component structure doesn't match the expected schema |
 | `SCHEMA_VALIDATION_SKIPPED` | WARNING | Schema validation skipped (`jsonschema` package not installed) |
 | `INVALID_JSON` | ERROR | File contains invalid JSON |
 | `FILE_READ_ERROR` | ERROR | Could not read view file from disk |
@@ -74,10 +74,10 @@ Per-view analysis that detects custom and param properties with no apparent refe
 | `LONG_LINE` | STYLE | Line exceeds 120 characters |
 | `MISSING_DOCSTRING` | STYLE | Public function missing a docstring |
 | `GLOBAL_VARIABLE_USAGE` | WARNING | Usage of the `global` keyword |
-| `JYTHON_PRINT_STATEMENT` | WARNING | `print x` statement syntax (Python 2 style) |
-| `JYTHON_DEPRECATED_ITERITEMS` | WARNING | `.iteritems()` usage (removed in Python 3) |
+| `JYTHON_PRINT_STATEMENT` | STYLE | `print x` statement syntax (Python 2 style) |
+| `JYTHON_DEPRECATED_ITERITEMS` | INFO | `.iteritems()` usage (removed in Python 3) |
 | `JYTHON_XRANGE_USAGE` | INFO | `xrange()` usage (renamed to `range` in Python 3) |
-| `JYTHON_STRING_TYPES` | WARNING | `basestring` or `unicode` usage |
+| `JYTHON_STRING_TYPES` | INFO | `basestring` or `unicode` usage |
 | `IGNITION_SYSTEM_OVERRIDE` | ERROR | Overriding the `system` variable |
 | `IGNITION_HARDCODED_GATEWAY` | WARNING | Hardcoded gateway URL |
 | `IGNITION_DEBUG_PRINT` | INFO | Debug `print()` statement left in code |
@@ -95,7 +95,7 @@ Per-view analysis that detects custom and param properties with no apparent refe
 | `JYTHON_MIXED_INDENTATION` | WARNING | Mixed tabs and spaces on the same line |
 | `JYTHON_INCONSISTENT_INDENTATION_STYLE` | INFO | File uses both tabs and spaces for indentation |
 | `JYTHON_INDENTATION_JUMP` | ERROR | Indentation increases by more than one level |
-| `JYTHON_PRINT_STATEMENT` | WARNING | `print x` statement syntax — use `print()` function |
+| `JYTHON_PRINT_STATEMENT` | STYLE | `print x` statement syntax — consider `print()` for cross-version portability |
 | `JYTHON_PREFER_PERSPECTIVE_PRINT` | INFO | Prefer `system.perspective.print()` over `print()` in Perspective context |
 | `JYTHON_HARDCODED_LOCALHOST` | WARNING | Hardcoded `localhost` or `127.0.0.1` reference |
 | `JYTHON_HTTP_WITHOUT_EXCEPTION_HANDLING` | WARNING | HTTP calls without `try/except` error handling |
@@ -107,7 +107,7 @@ Per-view analysis that detects custom and param properties with no apparent refe
 ### Suppress globally via CLI
 
 ```bash
-ignition-lint -p ./project --profile full --ignore-codes NAMING_PARAMETER,LONG_LINE
+ignition-lint -t ./project --profile full --ignore-codes NAMING_PARAMETER,LONG_LINE
 ```
 
 ### Suppress per-path via `.ignition-lintignore`

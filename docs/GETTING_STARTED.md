@@ -183,15 +183,10 @@ Add to `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: local
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: main
     hooks:
-      - id: ignition-perspective-lint
-        name: Ignition Perspective Linter
-        entry: uv run python tools/ignition-perspective-linter.py
-        language: system
-        files: \.json$
-        args: [--target, .]
-        pass_filenames: false
+      - id: ignition-lint
 ```
 
 ## 🎯 Common Workflows
@@ -200,7 +195,7 @@ repos:
 ```bash
 # 1. Edit your Perspective views or scripts
 # 2. Validate changes
-uv run python tools/ignition-perspective-linter.py --target path/to/modified/views
+ignition-lint --target path/to/modified/views --profile full --fail-on error
 
 # 3. Fix any issues found
 # 4. Re-validate to confirm fixes
@@ -212,14 +207,7 @@ uv run python tools/ignition-perspective-linter.py --target path/to/modified/vie
 # Add to your CI pipeline
 name: Validate Ignition Project
 run: |
-  uv run python tools/ignition-perspective-linter.py --target ./perspective/views
-  uv run python tools/ignition-script-linter.py --target ./script-python
-  
-  # Fail the build if critical errors are found
-  if [ $? -ne 0 ]; then
-    echo "Critical validation errors found!"
-    exit 1
-  fi
+  ignition-lint --target projects --profile full --schema-mode robust --fail-on error
 ```
 
 ### Code Review Process

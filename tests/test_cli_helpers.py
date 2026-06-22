@@ -1,3 +1,4 @@
+from ignition_lint.action_entry import build_cli_args
 from ignition_lint.cli import determine_checks
 from ignition_lint.json_linter import JsonLinter
 
@@ -19,6 +20,61 @@ def test_determine_checks_explicit():
         "perspective",
         "scripts",
     }
+
+
+def test_action_args_support_target_full_profile():
+    args = build_cli_args(
+        {
+            "INPUT_TARGET": "projects",
+            "INPUT_PROFILE": "full",
+            "INPUT_SCHEMA_MODE": "robust",
+            "INPUT_FAIL_ON": "error",
+            "INPUT_REPORT_FORMAT": "json",
+        }
+    )
+
+    assert args == [
+        "--target",
+        "projects",
+        "--profile",
+        "full",
+        "--schema-mode",
+        "robust",
+        "--fail-on",
+        "error",
+        "--report-format",
+        "json",
+    ]
+
+
+def test_action_args_preserve_legacy_lint_type_all():
+    args = build_cli_args(
+        {
+            "INPUT_PROJECT_PATH": "projects/pilot_line",
+            "INPUT_LINT_TYPE": "all",
+            "INPUT_NAMING_ONLY": "false",
+        }
+    )
+
+    assert args == ["--project", "projects/pilot_line", "--profile", "full"]
+
+
+def test_action_args_include_legacy_naming_only_when_requested():
+    args = build_cli_args(
+        {
+            "INPUT_PROJECT_PATH": "projects/pilot_line",
+            "INPUT_LINT_TYPE": "perspective",
+            "INPUT_NAMING_ONLY": "true",
+        }
+    )
+
+    assert args == [
+        "--project",
+        "projects/pilot_line",
+        "--profile",
+        "perspective-only",
+        "--naming-only",
+    ]
 
 
 class TestRootComponentNaming:

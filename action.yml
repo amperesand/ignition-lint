@@ -8,9 +8,13 @@ inputs:
     required: false
     default: ''
   files:
-    description: 'Comma-separated list of ignition files to lint (supports glob patterns)'
+    description: 'Comma-separated file globs for naming-only linting. Prefer target for CI enforcement.'
     required: false
-    default: '**/view.json'
+    default: ''
+  target:
+    description: 'Path to any directory; recursively lints all view.json and .py files found'
+    required: false
+    default: ''
   component_style:
     description: 'Naming convention style for components'
     required: false
@@ -32,14 +36,23 @@ inputs:
   project_path:
     description: 'Path to Ignition project directory (alternative to files)'
     required: false
+    default: ''
   lint_type:
-    description: 'Type of linting to perform (perspective, scripts, all)'
+    description: 'Legacy lint preset (perspective, scripts, naming, all). Prefer profile or checks for new workflows.'
     required: false
-    default: 'perspective'
+    default: ''
+  profile:
+    description: 'Lint profile (default, full, perspective-only, scripts-only, naming-only)'
+    required: false
+    default: ''
+  checks:
+    description: 'Comma-separated checks to run (perspective,naming,scripts)'
+    required: false
+    default: ''
   naming_only:
     description: 'Only run naming convention checks, skip empirical linter'
     required: false
-    default: 'true'
+    default: 'false'
   ignore_codes:
     description: 'Comma-separated rule codes to suppress globally'
     required: false
@@ -55,6 +68,14 @@ inputs:
   component:
     description: 'Filter Perspective linting to a specific component type prefix (e.g. ia.display.label)'
     required: false
+  report_format:
+    description: 'Output format (text or json)'
+    required: false
+    default: 'text'
+  ignore_file:
+    description: 'Path to .ignition-lintignore-compatible ignore file'
+    required: false
+    default: ''
 
 outputs:
   result:
@@ -86,6 +107,7 @@ runs:
       shell: bash
       env:
         INPUT_FILES: ${{ inputs.files }}
+        INPUT_TARGET: ${{ inputs.target }}
         INPUT_COMPONENT_STYLE: ${{ inputs.component_style }}
         INPUT_PARAMETER_STYLE: ${{ inputs.parameter_style }}
         INPUT_COMPONENT_STYLE_RGX: ${{ inputs.component_style_rgx }}
@@ -93,9 +115,13 @@ runs:
         INPUT_ALLOW_ACRONYMS: ${{ inputs.allow_acronyms }}
         INPUT_PROJECT_PATH: ${{ inputs.project_path }}
         INPUT_LINT_TYPE: ${{ inputs.lint_type }}
+        INPUT_PROFILE: ${{ inputs.profile }}
+        INPUT_CHECKS: ${{ inputs.checks }}
         INPUT_NAMING_ONLY: ${{ inputs.naming_only }}
         INPUT_IGNORE_CODES: ${{ inputs.ignore_codes }}
+        INPUT_IGNORE_FILE: ${{ inputs.ignore_file }}
         INPUT_SCHEMA_MODE: ${{ inputs.schema_mode }}
         INPUT_FAIL_ON: ${{ inputs.fail_on }}
+        INPUT_REPORT_FORMAT: ${{ inputs.report_format }}
         INPUT_COMPONENT: ${{ inputs.component }}
       run: ignition-lint-action

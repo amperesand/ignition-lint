@@ -32,9 +32,10 @@ ignition-lint -p /path/to/project --ignore-codes NAMING_PARAMETER,NAMING_COMPONE
 ### GitHub Actions
 
 ```yaml
-- uses: TheThoughtagen/ignition-lint@v1
+- uses: amperesand/ignition-lint@main
   with:
-    project_path: ./my-project
+    target: ./my-project
+    profile: full
     ignore_codes: "NAMING_PARAMETER,NAMING_COMPONENT"
 ```
 
@@ -104,12 +105,12 @@ A line **without** a colon is treated as a blanket pattern. A line **with** a co
 Override the default location with `--ignore-file`:
 
 ```bash
-ignition-lint -p /path/to/project --ignore-file /shared/config/.ignition-lintignore
+ignition-lint -t /path/to/project --ignore-file /shared/config/.ignition-lintignore
 ```
 
 ### Path Resolution
 
-Paths are matched relative to the project root. Given `--project /home/user/my-project`, the pattern `scripts/generated/**` matches files under `/home/user/my-project/scripts/generated/`.
+Paths are matched relative to the project or target root. Given `--target /home/user/my-project`, the pattern `scripts/generated/**` matches files under `/home/user/my-project/scripts/generated/`.
 
 ---
 
@@ -198,15 +199,15 @@ Suppress noisy rules during initial rollout, then remove suppressions as the cod
 
 ```bash
 # Phase 1: Focus on errors only
-ignition-lint -p ./my-project --profile full \
+ignition-lint -t ./my-project --profile full \
   --ignore-codes NAMING_PARAMETER,NAMING_COMPONENT,MISSING_DOCSTRING,LONG_LINE,GENERIC_COMPONENT_NAME
 
 # Phase 2: Address naming
-ignition-lint -p ./my-project --profile full \
+ignition-lint -t ./my-project --profile full \
   --ignore-codes MISSING_DOCSTRING,LONG_LINE
 
 # Phase 3: Full enforcement
-ignition-lint -p ./my-project --profile full
+ignition-lint -t ./my-project --profile full
 ```
 
 ### Ignore Generated / Reference Views
@@ -229,10 +230,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: TheThoughtagen/ignition-lint@v1
+      - uses: amperesand/ignition-lint@main
         with:
-          project_path: .
-          lint_type: all
+          target: .
+          profile: full
           ignore_codes: "NAMING_PARAMETER"
           fail_on: error
 ```

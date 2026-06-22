@@ -188,7 +188,7 @@ def determine_checks(profile: str, explicit: str | None, naming_only: bool) -> s
     return PROFILE_CHECKS.get(profile, PROFILE_CHECKS["default"])
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Lint Ignition projects using built-in validators",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -270,11 +270,11 @@ def parse_args() -> argparse.Namespace:
         "--ignore-file",
         help="Path to ignore file (default: {project}/.ignition-lintignore)",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: Sequence[str] | None = None) -> int:
+    args = parse_args(argv)
 
     if args.check_linter:
         return 0 if check_linter_availability(args.schema_mode) else 1

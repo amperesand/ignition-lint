@@ -1,8 +1,17 @@
-- id: ignition-perspective-lint
-  name: Ignition Perspective Linter
+- id: ignition-lint
+  name: Ignition Lint
   entry: ignition-lint
   language: python
-  files: '\.json$'
-  args: ['--format=text', '--severity=warning', '--exit-code']
-  pass_filenames: true
-  description: 'Lint Ignition Perspective component files for schema compliance and best practices'
+  args: ["--target", ".", "--profile", "full", "--schema-mode", "robust", "--fail-on", "error"]
+  pass_filenames: false
+  always_run: true
+  description: "Lint Ignition Perspective views and Jython scripts recursively"
+
+- id: ignition-perspective-lint
+  name: Ignition Perspective Lint
+  entry: ignition-lint
+  language: python
+  args: ["--target", ".", "--profile", "perspective-only", "--schema-mode", "robust", "--fail-on", "error"]
+  pass_filenames: false
+  always_run: true
+  description: "Lint Ignition Perspective view.json files recursively"

@@ -20,18 +20,19 @@ Suppress one or more rule codes globally across the entire run.
 
 ```bash
 # Single code
-ignition-lint -p /path/to/project --ignore-codes NAMING_PARAMETER
+ignition-lint -t /path/to/project --ignore-codes NAMING_PARAMETER
 
 # Multiple codes (comma-separated, no spaces)
-ignition-lint -p /path/to/project --ignore-codes NAMING_PARAMETER,NAMING_COMPONENT,LONG_LINE
+ignition-lint -t /path/to/project --ignore-codes NAMING_PARAMETER,NAMING_COMPONENT,LONG_LINE
 ```
 
 ### GitHub Actions
 
 ```yaml
-- uses: whiskeyhouse/ignition-lint@v1
+- uses: amperesand/ignition-lint@main
   with:
-    project_path: ./my-project
+    target: ./my-project
+    profile: full
     ignore_codes: "NAMING_PARAMETER,NAMING_COMPONENT"
 ```
 
@@ -58,7 +59,7 @@ ignition-lint-action
 
 ## 2. `.ignition-lintignore` File
 
-Place a `.ignition-lintignore` file in the project root directory (the path passed to `--project`). The linter reads it automatically.
+Place a `.ignition-lintignore` file in the project or target root directory. The linter reads it automatically.
 
 ### Syntax
 
@@ -102,12 +103,12 @@ A line **without** a colon is treated as a blanket pattern. A line **with** a co
 Override the default location with `--ignore-file`:
 
 ```bash
-ignition-lint -p /path/to/project --ignore-file /shared/config/.ignition-lintignore
+ignition-lint -t /path/to/project --ignore-file /shared/config/.ignition-lintignore
 ```
 
 ### Path Resolution
 
-Paths in the ignore file are matched relative to the project root. For example, given `--project /home/user/my-project`, the pattern `scripts/generated/**` matches files under `/home/user/my-project/scripts/generated/`.
+Paths in the ignore file are matched relative to the project or target root. For example, given `--target /home/user/my-project`, the pattern `scripts/generated/**` matches files under `/home/user/my-project/scripts/generated/`.
 
 ---
 
@@ -181,7 +182,7 @@ Below is a non-exhaustive list of rule codes you can suppress. Run the linter wi
 
 | Code | Severity | Description |
 |------|----------|-------------|
-| `SCHEMA_VALIDATION` | ERROR | Component structure doesn't match schema |
+| `SCHEMA_VALIDATION` | WARNING | Component structure doesn't match schema |
 | `GENERIC_COMPONENT_NAME` | STYLE | Component has a non-descriptive default name |
 | `MISSING_ICON_PATH` | WARNING | Icon component missing required path prop |
 | `SINGLE_CHILD_FLEX` | STYLE | Flex container with only one child |
@@ -202,10 +203,10 @@ Below is a non-exhaustive list of rule codes you can suppress. Run the linter wi
 | `LONG_LINE` | STYLE | Line exceeds 120 characters |
 | `MISSING_DOCSTRING` | STYLE | Public function missing docstring |
 | `GLOBAL_VARIABLE_USAGE` | WARNING | `global` keyword usage |
-| `JYTHON_PRINT_STATEMENT` | WARNING | `print x` statement syntax |
-| `JYTHON_DEPRECATED_ITERITEMS` | WARNING | `.iteritems()` usage |
+| `JYTHON_PRINT_STATEMENT` | STYLE | `print x` statement syntax |
+| `JYTHON_DEPRECATED_ITERITEMS` | INFO | `.iteritems()` usage |
 | `JYTHON_XRANGE_USAGE` | INFO | `xrange()` usage |
-| `JYTHON_STRING_TYPES` | WARNING | `basestring`/`unicode` usage |
+| `JYTHON_STRING_TYPES` | INFO | `basestring`/`unicode` usage |
 | `IGNITION_SYSTEM_OVERRIDE` | ERROR | Overriding `system` variable |
 | `IGNITION_HARDCODED_GATEWAY` | WARNING | Hardcoded gateway URL |
 | `IGNITION_DEBUG_PRINT` | INFO | Debug print statement |
@@ -219,7 +220,7 @@ Below is a non-exhaustive list of rule codes you can suppress. Run the linter wi
 |------|----------|-------------|
 | `JYTHON_SYNTAX_ERROR` | ERROR | Syntax error in inline script |
 | `JYTHON_IGNITION_INDENTATION_REQUIRED` | ERROR | Missing required indentation |
-| `JYTHON_PRINT_STATEMENT` | WARNING | Print statement in inline script |
+| `JYTHON_PRINT_STATEMENT` | STYLE | Print statement in inline script |
 | `JYTHON_PREFER_PERSPECTIVE_PRINT` | INFO | Prefer `system.perspective.print()` |
 
 ---
@@ -265,15 +266,15 @@ Suppress noisy rules during initial rollout, then remove suppressions as the cod
 
 ```bash
 # Phase 1: Focus on errors only
-ignition-lint -p ./my-project --profile full \
+ignition-lint -t ./my-project --profile full \
   --ignore-codes NAMING_PARAMETER,NAMING_COMPONENT,MISSING_DOCSTRING,LONG_LINE,GENERIC_COMPONENT_NAME
 
 # Phase 2: Address naming
-ignition-lint -p ./my-project --profile full \
+ignition-lint -t ./my-project --profile full \
   --ignore-codes MISSING_DOCSTRING,LONG_LINE
 
 # Phase 3: Full enforcement
-ignition-lint -p ./my-project --profile full
+ignition-lint -t ./my-project --profile full
 ```
 
 ### Ignore Generated / Reference Views
@@ -301,10 +302,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: whiskeyhouse/ignition-lint@v1
+      - uses: amperesand/ignition-lint@main
         with:
-          project_path: .
-          lint_type: all
+          target: .
+          profile: full
           ignore_codes: "NAMING_PARAMETER"
           fail_on: error
 ```

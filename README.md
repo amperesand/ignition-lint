@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/ignition-lint-toolkit)](https://pypi.org/project/ignition-lint-toolkit/)
 [![Python](https://img.shields.io/pypi/pyversions/ignition-lint-toolkit)](https://pypi.org/project/ignition-lint-toolkit/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/TheThoughtagen/ignition-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/TheThoughtagen/ignition-lint/actions/workflows/ci.yml)
+[![CI](https://github.com/amperesand/ignition-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/amperesand/ignition-lint/actions/workflows/ci.yml)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-ignition--lint-blue?logo=github)](https://github.com/marketplace/actions/ignition-lint)
 
 **A comprehensive linting toolkit for [Ignition SCADA](https://inductiveautomation.com/) projects** that catches errors before runtime, enforces best practices, and maintains code quality across your industrial automation systems.
@@ -151,10 +151,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: TheThoughtagen/ignition-lint@v1
+      - uses: amperesand/ignition-lint@main
         with:
-          project_path: .
-          lint_type: all
+          target: .
+          profile: full
           fail_on: error
           ignore_codes: "NAMING_PARAMETER"  # Suppress during migration
 ```
@@ -178,9 +178,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: amperesand/ignition-lint@main
         with:
-          project_path: projects/pilot_line
-          lint_type: all
-          naming_only: "false"
+          target: projects/pilot_line
+          profile: full
           schema_mode: robust
           fail_on: error
 ```
@@ -210,10 +209,10 @@ Catch issues before they're committed:
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/TheThoughtagen/ignition-lint
-    rev: v1
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: codex/ignition-compat-fixes
     hooks:
-      - id: ignition-perspective-lint
+      - id: ignition-lint
 ```
 
 [Pre-commit guide →](https://TheThoughtagen.github.io/ignition-lint/integration/pre-commit)

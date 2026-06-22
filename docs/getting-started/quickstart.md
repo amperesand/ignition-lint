@@ -154,10 +154,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: TheThoughtagen/ignition-lint@v1
+      - uses: amperesand/ignition-lint@main
         with:
-          project_path: .
-          lint_type: all
+          target: .
+          profile: full
           fail_on: error
 ```
 
@@ -176,10 +176,10 @@ pip install pre-commit
 # Add to .pre-commit-config.yaml
 cat > .pre-commit-config.yaml << 'EOF'
 repos:
-  - repo: https://github.com/TheThoughtagen/ignition-lint
-    rev: v1
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: main
     hooks:
-      - id: ignition-perspective-lint
+      - id: ignition-lint
 EOF
 
 # Install hooks

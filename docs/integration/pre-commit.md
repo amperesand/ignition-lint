@@ -5,18 +5,19 @@ title: Pre-commit
 
 # Pre-commit Hook
 
-Run ignition-lint automatically before every commit using [pre-commit](https://pre-commit.com/) or a manual Git hook.
+Run ignition-lint before commits using the [pre-commit](https://pre-commit.com/)
+framework.
 
-## Using pre-commit framework
+## Recommended Hook
 
-Add ignition-lint to your `.pre-commit-config.yaml`:
+Add this to `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/TheThoughtagen/ignition-lint
-    rev: v1  # use a specific tag
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: codex/ignition-compat-fixes
     hooks:
-      - id: ignition-perspective-lint
+      - id: ignition-lint
 ```
 
 Then install the hooks:
@@ -25,57 +26,60 @@ Then install the hooks:
 pre-commit install
 ```
 
-### Hook Details
+The `ignition-lint` hook runs:
 
-| Field | Value |
-|---|---|
-| **id** | `ignition-perspective-lint` |
-| **name** | Ignition Perspective Linter |
-| **entry** | `ignition-lint` |
-| **language** | `python` |
-| **files** | `\.json$` |
-| **args** | `['--format=text', '--severity=warning', '--exit-code']` |
+```bash
+ignition-lint --target . --profile full --schema-mode robust --fail-on error
+```
 
-The hook runs on all `.json` files and passes filenames automatically. It exits with a non-zero code if warnings or errors are found, blocking the commit.
+That is the same enforcement mode recommended for CI: warnings remain visible,
+but only `error` severity blocks a commit.
 
-### Customizing Arguments
+## Perspective-Only Hook
 
-Override the default arguments in your config:
+For a lighter local gate that skips standalone scripts:
 
 ```yaml
 repos:
-  - repo: https://github.com/TheThoughtagen/ignition-lint
-    rev: v1
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: codex/ignition-compat-fixes
     hooks:
       - id: ignition-perspective-lint
-        args: ['--format=text', '--severity=error', '--exit-code']
 ```
 
-This only blocks commits on errors (not warnings).
-
-## Manual Git Hook
-
-Alternatively, create a hook script directly:
+This hook runs:
 
 ```bash
-#!/bin/sh
-# .git/hooks/pre-commit
-
-ignition-lint --project . --profile full > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo "Ignition lint failed. Run 'ignition-lint --project . --profile full' for details."
-    exit 1
-fi
+ignition-lint --target . --profile perspective-only --schema-mode robust --fail-on error
 ```
 
-Make it executable:
+## Customizing Arguments
 
-```bash
-chmod +x .git/hooks/pre-commit
+Override `args` in your project config:
+
+```yaml
+repos:
+  - repo: https://github.com/amperesand/ignition-lint
+    rev: codex/ignition-compat-fixes
+    hooks:
+      - id: ignition-lint
+        args:
+          - --target
+          - projects/pilot_line
+          - --profile
+          - full
+          - --schema-mode
+          - robust
+          - --fail-on
+          - error
 ```
 
-## Tips
+## Notes
 
-- Use `--ignore-codes` in the hook arguments to suppress rules you haven't addressed yet
-- For large projects, consider running the hook only on changed files by using `pass_filenames: true` (the default)
-- The pre-commit framework caches environments, so subsequent runs are fast
+- The shipped hooks use `pass_filenames: false` because Ignition views and
+  scripts can reference sibling files and shared project state.
+- Use `.ignition-lintignore` or `--ignore-codes` for temporary adoption
+  suppressions.
+- For very large gateway repositories, point `--target` at the project or folder
+  you actively work on locally, and keep full `--target projects` enforcement in
+  CI.

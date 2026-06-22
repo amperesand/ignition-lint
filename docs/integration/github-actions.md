@@ -5,7 +5,8 @@ title: GitHub Actions
 
 # GitHub Actions Integration
 
-ignition-lint ships as a composite GitHub Action that you can add to any workflow.
+ignition-lint ships as a composite GitHub Action that you can add to any
+workflow.
 
 ## Quick Start
 
@@ -20,31 +21,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: TheThoughtagen/ignition-lint@v1
+      - uses: amperesand/ignition-lint@main
         with:
-          files: "**/view.json"
-          component_style: "PascalCase"
-          parameter_style: "camelCase"
+          target: "."
+          profile: "full"
+          schema_mode: "robust"
+          fail_on: "error"
 ```
 
 ## Action Inputs
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| `files` | No | `**/view.json` | Comma-separated file globs to lint |
+| `files` | No | — | Comma-separated file globs for naming-only linting. Prefer `target` for enforcement |
+| `target` | No | — | Any directory to recursively lint for `view.json` and `.py` files |
 | `component_style` | No | `PascalCase` | Naming convention for components |
 | `parameter_style` | No | `camelCase` | Naming convention for parameters |
 | `component_style_rgx` | No | — | Custom regex for component names |
 | `parameter_style_rgx` | No | — | Custom regex for parameter names |
 | `allow_acronyms` | No | `false` | Allow acronyms in names |
-| `project_path` | No | — | Path to Ignition project directory |
-| `lint_type` | No | `perspective` | Type of linting: `perspective`, `scripts`, or `all` |
-| `naming_only` | No | `true` | Only run naming convention checks |
+| `project_path` | No | — | Legacy standard Ignition project directory path |
+| `lint_type` | No | — | Legacy preset: `perspective`, `scripts`, `naming`, or `all` |
+| `profile` | No | — | CLI profile: `default`, `full`, `perspective-only`, `scripts-only`, `naming-only` |
+| `checks` | No | — | Comma-separated checks: `perspective,naming,scripts` |
+| `naming_only` | No | `false` | Only run naming convention checks |
 | `ignore_codes` | No | — | Comma-separated rule codes to suppress |
+| `ignore_file` | No | — | Path to `.ignition-lintignore`-compatible ignore file |
 | `schema_mode` | No | `robust` | Schema strictness: `strict`, `robust`, or `permissive` |
 | `fail_on` | No | `error` | Minimum severity that causes a non-zero exit: `error`, `warning`, `info`, `style` |
 | `component` | No | — | Filter Perspective linting to a specific component type prefix |
-| `version` | No | action checkout | Version of ignition-lint-toolkit to install from PyPI. Leave blank to install the checked-out action code. |
+| `report_format` | No | `text` | Output format: `text` or `json` |
+| `version` | No | action checkout | Version of ignition-lint-toolkit to install from PyPI. Leave blank to install the checked-out action code |
 
 ## Action Outputs
 
@@ -54,46 +61,43 @@ jobs:
 
 ## Examples
 
-### Full project lint
-
-```yaml
-- uses: TheThoughtagen/ignition-lint@v1
-  with:
-    project_path: .
-    lint_type: all
-    naming_only: "false"
-```
-
-### Ampersand fork enforcement
-
-When using the Ampersand fork, leave `version` blank. The action will install
-the checked-out fork code, including Ampersand compatibility fixes, instead of
-the upstream PyPI package.
+### Full gateway data lint
 
 ```yaml
 - uses: amperesand/ignition-lint@main
   with:
-    project_path: projects/pilot_line
-    lint_type: all
-    naming_only: "false"
+    target: projects
+    profile: full
     schema_mode: robust
     fail_on: error
 ```
 
-For a gateway `data/` repository with many projects, run the CLI directly:
+### Pilot line lint
 
 ```yaml
-- uses: actions/setup-python@v5
+- uses: amperesand/ignition-lint@main
   with:
-    python-version: "3.12"
-- run: pip install git+https://github.com/amperesand/ignition-lint.git@main
-- run: ignition-lint --target projects --profile full --schema-mode robust --fail-on error
+    target: projects/pilot_line
+    profile: full
+    schema_mode: robust
+    fail_on: error
+```
+
+### JSON output for agent workflows
+
+```yaml
+- uses: amperesand/ignition-lint@main
+  with:
+    target: projects/pilot_line
+    profile: full
+    report_format: json
+    fail_on: error
 ```
 
 ### Naming only with acronym support
 
 ```yaml
-- uses: TheThoughtagen/ignition-lint@v1
+- uses: amperesand/ignition-lint@main
   with:
     files: "**/view.json"
     component_style: "PascalCase"
@@ -101,24 +105,15 @@ For a gateway `data/` repository with many projects, run the CLI directly:
     allow_acronyms: "true"
 ```
 
-### Custom regex patterns
-
-```yaml
-- uses: TheThoughtagen/ignition-lint@v1
-  with:
-    files: "**/view.json"
-    component_style_rgx: "^[A-Z][a-zA-Z0-9]*$"
-    parameter_style_rgx: "^[a-z][a-zA-Z0-9]*$"
-```
-
 ### Suppress rules during adoption
 
 ```yaml
-- uses: TheThoughtagen/ignition-lint@v1
+- uses: amperesand/ignition-lint@main
   with:
-    project_path: .
-    lint_type: all
+    target: .
+    profile: full
     ignore_codes: "NAMING_PARAMETER,MISSING_DOCSTRING,LONG_LINE"
+    fail_on: error
 ```
 
 ## How It Works
@@ -127,17 +122,9 @@ The action:
 
 1. Sets up Python 3.10
 2. Installs the checked-out action code, or installs ignition-lint-toolkit from PyPI when `version` is set
-3. Runs `ignition-lint-action` with environment variables mapped from the action inputs
+3. Translates action inputs into the same `ignition-lint` CLI flags used locally
 4. Exits with code 0 on success or 1 on failure
 
-## Environment Variables
-
-The action entry point reads inputs from `INPUT_*` environment variables. You can also invoke it directly:
-
-```bash
-export INPUT_FILES="**/view.json"
-export INPUT_COMPONENT_STYLE="PascalCase"
-export INPUT_PARAMETER_STYLE="camelCase"
-export INPUT_IGNORE_CODES="NAMING_PARAMETER"
-ignition-lint-action
-```
+The `target` input is preferred for CI, pre-commit, and LLM agent flows because
+it recursively discovers Ignition `view.json` files and standalone `.py` scripts
+without assuming a single standard project layout.

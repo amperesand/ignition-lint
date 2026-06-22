@@ -105,9 +105,8 @@ jobs:
         id: test-all
         uses: ./
         with:
-          project_path: "test-project"
-          lint_type: "all"
-          naming_only: "false"
+          target: "test-project"
+          profile: "full"
           fail_on: "error"
           ignore_codes: "NAMING_PARAMETER"  # Suppress during testing
         continue-on-error: true  # Don't fail the workflow if linting finds issues
@@ -149,7 +148,7 @@ jobs:
           # Create .ignition-lintignore
           cat > test-project/.ignition-lintignore << 'EOF'
           # Suppress naming violations in test files
-          **/TestView/** NAMING_PARAMETER
+          **/TestView/**:NAMING_PARAMETER
           EOF
 
       - name: Test with suppression file

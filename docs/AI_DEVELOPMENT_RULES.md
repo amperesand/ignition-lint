@@ -234,11 +234,11 @@ Or for multiple handlers:
 ### **9. Pre-Commit Validation**
 Before generating any UI, run:
 ```bash
-./ignition-lint path/to/view.json --format=json --severity=error
+ignition-lint --target path/to/view-folder --checks perspective --report-format json --fail-on error
 ```
 
 **AI Integration:**
-- Parse JSON output for `status: "issues_found"`
+- Parse JSON output for `issues` and `summary`
 - Fix any `severity: "error"` issues before proceeding
 - Consider `severity: "warning"` suggestions for better UIs
 
