@@ -259,7 +259,7 @@ class JythonValidator:
         for line_num in mixed_lines[:3]:
             self.issues.append(
                 JythonIssue(
-                    severity=LintSeverity.WARNING,
+                    severity=LintSeverity.STYLE,
                     code="JYTHON_MIXED_INDENTATION",
                     message=f"Mixed tabs and spaces on line {line_num}",
                     suggestion="Use consistent tabs for indentation (Ignition standard).",

@@ -61,6 +61,7 @@ class LintReport:
     issues: list[LintIssue] = field(default_factory=list)
     summary: dict[str, int] = field(default_factory=dict)
     suppression: SuppressionConfig | None = None
+    include_advisory: bool = False
     suppressed_count: int = 0
 
     def add_issue(self, issue: LintIssue) -> None:
@@ -68,6 +69,11 @@ class LintReport:
             issue.code, issue.file_path
         ):
             self.suppressed_count += 1
+            return
+        if (
+            not self.include_advisory
+            and issue.severity in {LintSeverity.INFO, LintSeverity.STYLE}
+        ):
             return
         self.issues.append(issue)
         self.summary[issue.severity.value] = (
@@ -83,19 +89,6 @@ class LintReport:
 
     def merge(self, other: LintReport) -> None:
         self.extend(other.issues)
-
-    def filter_min_severity(self, threshold: LintSeverity) -> None:
-        """Keep only issues at or above the requested severity threshold."""
-        self.issues = [
-            issue
-            for issue in self.issues
-            if issue.severity.fails_threshold(threshold)
-        ]
-        self.summary = {}
-        for issue in self.issues:
-            self.summary[issue.severity.value] = (
-                self.summary.get(issue.severity.value, 0) + 1
-            )
 
 
 def format_report_text(report: LintReport) -> str:

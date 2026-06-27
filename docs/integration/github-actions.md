@@ -49,6 +49,7 @@ jobs:
 | `ignore_file` | No | — | Path to `.ignition-lintignore`-compatible ignore file |
 | `schema_mode` | No | `robust` | Schema strictness: `strict`, `robust`, or `permissive` |
 | `fail_on` | No | `error` | Minimum severity that causes a non-zero exit: `error`, `warning`, `info`, `style` |
+| `include_advisory` | No | `false` | Include advisory `info` and `style` findings in output |
 | `component` | No | — | Filter Perspective linting to a specific component type prefix |
 | `report_format` | No | `text` | Output format: `text` or `json` |
 | `version` | No | action checkout | Version of ignition-lint-toolkit to install from PyPI. Leave blank to install the checked-out action code |

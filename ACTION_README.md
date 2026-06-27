@@ -39,6 +39,7 @@ jobs:
 
 ### Failure Control
 - **`fail_on`**: Minimum severity that fails the workflow (`error`, `warning`, `info`, `style`) - default: `error`
+- **`include_advisory`**: Include advisory `info` and `style` findings in output - default: `false`
 
 See full input documentation in [action.yml](action.yml)
 

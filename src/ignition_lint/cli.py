@@ -88,8 +88,9 @@ def lint_perspective(
     schema_mode: str,
     component_type: str | None,
     verbose: bool,
+    include_advisory: bool = False,
 ) -> LintReport:
-    report = LintReport()
+    report = LintReport(include_advisory=include_advisory)
     schema_path = schema_path_for(schema_mode)
     linter = IgnitionPerspectiveLinter(str(schema_path))
     linter.lint_project(str(target), target_component_type=component_type)
@@ -101,9 +102,10 @@ def lint_perspective_files(
     view_files: list[Path],
     schema_mode: str,
     component_type: str | None,
+    include_advisory: bool = False,
 ) -> LintReport:
     """Lint an explicit list of view.json files."""
-    report = LintReport()
+    report = LintReport(include_advisory=include_advisory)
     schema_path = schema_path_for(schema_mode)
     linter = IgnitionPerspectiveLinter(str(schema_path))
     for vf in view_files:
@@ -112,8 +114,10 @@ def lint_perspective_files(
     return report
 
 
-def lint_scripts(target: Path, verbose: bool) -> LintReport:
-    report = LintReport()
+def lint_scripts(
+    target: Path, verbose: bool, include_advisory: bool = False
+) -> LintReport:
+    report = LintReport(include_advisory=include_advisory)
     linter = IgnitionScriptLinter()
     linter.lint_directory(str(target))
     report.extend(convert_script_issues(linter.issues))
@@ -130,9 +134,10 @@ def lint_target_directory(
     component_style_rgx: str | None,
     parameter_style_rgx: str | None,
     allow_acronyms: bool,
+    include_advisory: bool = False,
 ) -> LintReport:
     """Lint an arbitrary directory recursively, auto-discovering view.json and .py files."""
-    report = LintReport()
+    report = LintReport(include_advisory=include_advisory)
 
     view_files = list(target.rglob("view.json"))
     py_files = list(target.rglob("*.py"))
@@ -144,7 +149,11 @@ def lint_target_directory(
     # Perspective checks on any view.json found
     if "perspective" in checks and view_files:
         print(f"📁 Found {len(view_files)} view.json files", file=sys.stderr)
-        report.merge(lint_perspective_files(view_files, schema_mode, component_type))
+        report.merge(
+            lint_perspective_files(
+                view_files, schema_mode, component_type, include_advisory
+            )
+        )
 
     # Naming checks on any view.json found
     if "naming" in checks and view_files:
@@ -157,12 +166,17 @@ def lint_target_directory(
                 component_style_rgx,
                 parameter_style_rgx,
                 allow_acronyms,
+                include_advisory,
             )
         )
 
     # Script checks on any .py files found
     if "scripts" in checks and py_files:
-        report.merge(lint_scripts(target, verbose=False))
+        report.merge(
+            lint_scripts(
+                target, verbose=False, include_advisory=include_advisory
+            )
+        )
 
     return report
 
@@ -174,6 +188,7 @@ def lint_naming(
     component_style_rgx: str | None,
     parameter_style_rgx: str | None,
     allow_acronyms: bool,
+    include_advisory: bool = False,
 ) -> LintReport:
     linter = JsonLinter(
         component_style=component_style,
@@ -183,7 +198,7 @@ def lint_naming(
         allow_acronyms=allow_acronyms,
     )
     errors = linter.lint_files(list(patterns))
-    report = LintReport()
+    report = LintReport(include_advisory=include_advisory)
     report.extend(convert_naming_errors(errors))
     return report
 
@@ -267,10 +282,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Severity threshold that causes a non-zero exit code",
     )
     parser.add_argument(
-        "--report-min-severity",
-        choices=[level.value for level in LintSeverity],
-        default=LintSeverity.STYLE.value,
-        help="Lowest severity included in output; use warning for CI enforcement",
+        "--include-advisory",
+        action="store_true",
+        help="Include advisory info/style findings in addition to actionable findings",
     )
     parser.add_argument(
         "--check-linter",
@@ -302,9 +316,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         project_root=project_root or target_root,
         ignore_file=ignore_file,
     )
-    report = LintReport(suppression=suppression)
+    report = LintReport(
+        suppression=suppression,
+        include_advisory=args.include_advisory,
+    )
     fail_threshold = LintSeverity.from_string(args.fail_on)
-    report_threshold = LintSeverity.from_string(args.report_min_severity)
 
     if args.files:
         patterns = [
@@ -341,6 +357,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.component_style_rgx,
                 args.parameter_style_rgx,
                 args.allow_acronyms,
+                args.include_advisory,
             )
         )
     elif args.project:
@@ -362,6 +379,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         args.schema_mode,
                         args.component,
                         args.verbose,
+                        args.include_advisory,
                     )
                 )
             else:
@@ -384,6 +402,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         args.component_style_rgx,
                         args.parameter_style_rgx,
                         args.allow_acronyms,
+                        args.include_advisory,
                     )
                 )
             else:
@@ -395,7 +414,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         if "scripts" in checks:
             scripts_path = project_path / "ignition" / "script-python"
             if scripts_path.exists():
-                report.merge(lint_scripts(scripts_path, args.verbose))
+                report.merge(
+                    lint_scripts(
+                        scripts_path,
+                        args.verbose,
+                        args.include_advisory,
+                    )
+                )
             else:
                 print(
                     f"ℹ️  No script-python directory found at {scripts_path}",
@@ -404,8 +429,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         print("❌ One of --project, --target, or --files is required", file=sys.stderr)
         return 1
-
-    report.filter_min_severity(report_threshold)
 
     if args.report_format == "json":
         output = {

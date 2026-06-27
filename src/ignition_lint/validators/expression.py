@@ -486,7 +486,7 @@ class ExpressionValidator:
                     op = "&&" if "&&" in code_expression else "||"
                     issues.append(
                         LintIssue(
-                            severity=LintSeverity.WARNING,
+                            severity=LintSeverity.INFO,
                             code="EXPR_NO_SHORT_CIRCUIT",
                             message=(
                                 f"'{op}' does not short-circuit in Ignition expressions; "

@@ -126,6 +126,9 @@ ignition-lint -t ./legacy --ignore-codes NAMING_PARAMETER,MISSING_DOCSTRING
 | **INFO** | Informational insights and suggestions |
 | **STYLE** | Code style and documentation improvements |
 
+Default reports include actionable `ERROR` and `WARNING` findings only. Add
+`--include-advisory` when you explicitly want `INFO` and `STYLE` cleanup hints.
+
 ## Lint suppression
 
 Three mechanisms let you control which rules fire and where:

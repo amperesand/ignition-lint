@@ -30,7 +30,6 @@ def test_action_args_support_target_full_profile():
             "INPUT_PROFILE": "full",
             "INPUT_SCHEMA_MODE": "robust",
             "INPUT_FAIL_ON": "error",
-            "INPUT_REPORT_MIN_SEVERITY": "warning",
             "INPUT_REPORT_FORMAT": "json",
         }
     )
@@ -44,44 +43,9 @@ def test_action_args_support_target_full_profile():
         "robust",
         "--fail-on",
         "error",
-        "--report-min-severity",
-        "warning",
         "--report-format",
         "json",
     ]
-
-
-def test_report_min_severity_filter_rebuilds_summary():
-    report = LintReport()
-    report.add_issue(
-        LintIssue(
-            severity=LintSeverity.ERROR,
-            code="ERR",
-            message="error",
-            file_path="view.json",
-        )
-    )
-    report.add_issue(
-        LintIssue(
-            severity=LintSeverity.WARNING,
-            code="WARN",
-            message="warning",
-            file_path="view.json",
-        )
-    )
-    report.add_issue(
-        LintIssue(
-            severity=LintSeverity.INFO,
-            code="INFO",
-            message="info",
-            file_path="view.json",
-        )
-    )
-
-    report.filter_min_severity(LintSeverity.WARNING)
-
-    assert [issue.code for issue in report.issues] == ["ERR", "WARN"]
-    assert report.summary == {"error": 1, "warning": 1}
 
 
 def test_action_args_preserve_legacy_lint_type_all():
@@ -112,6 +76,62 @@ def test_action_args_include_legacy_naming_only_when_requested():
         "perspective-only",
         "--naming-only",
     ]
+
+
+def test_action_args_include_advisory_when_requested():
+    args = build_cli_args(
+        {
+            "INPUT_TARGET": "projects",
+            "INPUT_PROFILE": "full",
+            "INPUT_INCLUDE_ADVISORY": "true",
+        }
+    )
+
+    assert args == [
+        "--target",
+        "projects",
+        "--profile",
+        "full",
+        "--include-advisory",
+    ]
+
+
+def test_report_drops_advisory_by_default():
+    report = LintReport()
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.INFO,
+            code="INFO",
+            message="info",
+            file_path="view.json",
+        )
+    )
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.STYLE,
+            code="STYLE",
+            message="style",
+            file_path="view.json",
+        )
+    )
+
+    assert report.issues == []
+    assert report.summary == {}
+
+
+def test_report_can_include_advisory():
+    report = LintReport(include_advisory=True)
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.INFO,
+            code="INFO",
+            message="info",
+            file_path="view.json",
+        )
+    )
+
+    assert [issue.code for issue in report.issues] == ["INFO"]
+    assert report.summary == {"info": 1}
 
 
 def test_configure_console_encoding_uses_utf8_when_available(monkeypatch):

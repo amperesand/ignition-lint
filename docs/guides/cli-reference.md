@@ -31,6 +31,7 @@ ignition-lint [OPTIONS]
 | `--verbose` | `-v` | Show detailed output | `false` |
 | `--report-format` | | Output format: `text` or `json` | `text` |
 | `--fail-on` | | Minimum severity that causes a non-zero exit code: `error`, `warning`, `info`, `style` | `error` |
+| `--include-advisory` | | Include advisory `info` and `style` findings in addition to actionable findings | `false` |
 | `--ignore-codes` | | Comma-separated rule codes to suppress | — |
 | `--ignore-file` | | Path to ignore file (defaults to `.ignition-lintignore` in the project or target root, if it exists) | — |
 | `--check-linter` | | Verify that Perspective schema files are available for the current `--schema-mode` and exit (useful for CI setup validation) | — |
@@ -77,6 +78,13 @@ ignition-lint -t /path/to/scripts --checks scripts --report-format json
 
 ```bash
 ignition-lint --project /path/to/project --profile full
+```
+
+By default, reports include actionable errors and warnings only. Advisory info
+and style findings are available explicitly:
+
+```bash
+ignition-lint --project /path/to/project --profile full --include-advisory
 ```
 
 ### Naming only with custom styles
@@ -128,8 +136,8 @@ ignition-lint --project /path/to/project --profile full --verbose
 📋 Issues by severity:
   ❌ Error: 3
   ⚠️ Warning: 12
-  ℹ️ Info: 5
-  💡 Style: 8
+  ℹ️ Info: 5     # only when --include-advisory is used
+  💡 Style: 8    # only when --include-advisory is used
 ```
 
 ### Issue Details
