@@ -206,12 +206,10 @@ Below is a non-exhaustive list of rule codes you can suppress. Run the linter wi
 | `JYTHON_PRINT_STATEMENT` | STYLE | `print x` statement syntax |
 | `JYTHON_DEPRECATED_ITERITEMS` | INFO | `.iteritems()` usage |
 | `JYTHON_XRANGE_USAGE` | INFO | `xrange()` usage |
-| `JYTHON_STRING_TYPES` | INFO | `basestring`/`unicode` usage |
 | `IGNITION_SYSTEM_OVERRIDE` | ERROR | Overriding `system` variable |
 | `IGNITION_HARDCODED_GATEWAY` | WARNING | Hardcoded gateway URL |
 | `IGNITION_DEBUG_PRINT` | INFO | Debug print statement |
 | `IGNITION_UNKNOWN_SYSTEM_CALL` | WARNING | Unrecognised `system.*` call |
-| `JAVA_INTEGRATION_DETECTED` | INFO | Java imports present |
 | `PARSE_WARNING` | WARNING | File could not be fully parsed |
 
 ### Jython Inline Rules (from view.json scripts)

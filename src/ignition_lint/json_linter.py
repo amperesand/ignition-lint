@@ -57,10 +57,27 @@ class JsonLinter:
         self.component_checker = StyleChecker(
             component_style, allow_acronyms, component_style_rgx
         )
+        self.component_title_checker = StyleChecker("Title Case", True)
+        self.allow_component_title_case = (
+            component_style == "PascalCase" and component_style_rgx is None
+        )
         self.parameter_checker = StyleChecker(
             parameter_style, allow_acronyms, parameter_style_rgx
         )
         self.errors: list[ValidationError] = []
+
+    def _is_valid_component_name(self, name: str) -> bool:
+        if self.component_checker.is_correct_style(name):
+            return True
+        return self.allow_component_title_case and self.component_title_checker.is_correct_style(
+            name
+        )
+
+    def _component_style_description(self) -> str:
+        description = self.component_checker.get_style_description()
+        if self.allow_component_title_case:
+            description += " or Title Case component names"
+        return description
 
     def lint_files(self, file_patterns: str | list[str]) -> list[ValidationError]:
         """
@@ -155,24 +172,25 @@ class JsonLinter:
             location: Current location in the JSON structure
         """
         if isinstance(data, dict):
-            for key, value in data.items():
-                if key == "name" and isinstance(value, str):
+            meta = data.get("meta")
+            if isinstance(meta, dict):
+                value = meta.get("name")
+                if isinstance(value, str):
                     # Skip "root" — Ignition assigns this to every view's root
                     # component by convention and it cannot be renamed.
-                    if value != "root" and not self.component_checker.is_correct_style(
-                        value
-                    ):
+                    if value != "root" and not self._is_valid_component_name(value):
                         self.errors.append(
                             ValidationError(
                                 file_path,
                                 "component",
                                 value,
-                                self.component_checker.get_style_description(),
-                                location,
+                                self._component_style_description(),
+                                f"{location}.meta",
                             )
                         )
-                else:
-                    self._check_component_names(value, file_path, f"{location}.{key}")
+
+            for key, value in data.items():
+                self._check_component_names(value, file_path, f"{location}.{key}")
 
         elif isinstance(data, list):
             for i, item in enumerate(data):

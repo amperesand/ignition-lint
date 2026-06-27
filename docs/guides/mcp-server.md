@@ -124,6 +124,6 @@ The linter now includes additional checks surfaced through the MCP server:
 
 - **Expression rules** (`EXPR_*`) — `now()` polling, unknown functions, malformed property refs, fragile component traversal
 - **Unused property rules** (`UNUSED_CUSTOM_PROPERTY`, `UNUSED_PARAM_PROPERTY`) — dead custom/param properties per view
-- **Bad component ref** (`JYTHON_BAD_COMPONENT_REF`) — fragile `getSibling`/`getParent`/`getChild`/`getComponent` usage in scripts
+- **Bad component ref** (`JYTHON_BAD_COMPONENT_REF`) — positional/dynamic component lookup, `getParent`, or legacy `getComponent` usage in scripts
 
 See the [Rule Codes](./rule-codes.md) reference for the complete list.

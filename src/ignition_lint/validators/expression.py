@@ -322,10 +322,12 @@ class ExpressionValidator:
                 )
             )
 
-        # now(N) with low rate
+        # now(N) with sub-second polling. Explicit one-second polling is common
+        # for HMI clocks and status labels; sub-second polling is the threshold
+        # where expression bindings are more likely to become client load.
         for m in re.finditer(r"\bnow\s*\(\s*(\d+)\s*\)", code_expression):
             rate = int(m.group(1))
-            if 0 < rate < 5000:
+            if 0 < rate < 1000:
                 issues.append(
                     LintIssue(
                         severity=LintSeverity.INFO,
@@ -334,7 +336,7 @@ class ExpressionValidator:
                         file_path=file_path,
                         component_path=component_path,
                         component_type=component_type,
-                        suggestion="Rates below 5000ms can impact client performance",
+                        suggestion="Rates below 1000ms can impact client performance",
                     )
                 )
 

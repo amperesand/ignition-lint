@@ -21,11 +21,19 @@ class TestNowPolling:
         )
         assert "EXPR_NOW_DEFAULT_POLLING" in _codes(issues)
 
-    def test_now_low_rate_info(self, validator):
+    def test_now_subsecond_rate_info(self, validator):
+        issues = validator.validate_expression(
+            "now(250)", "test", "file.json", "root", "ia.display.label"
+        )
+        assert "EXPR_NOW_LOW_POLLING" in _codes(issues)
+
+    def test_now_explicit_one_second_rate_ok(self, validator):
         issues = validator.validate_expression(
             "now(1000)", "test", "file.json", "root", "ia.display.label"
         )
-        assert "EXPR_NOW_LOW_POLLING" in _codes(issues)
+        codes = _codes(issues)
+        assert "EXPR_NOW_DEFAULT_POLLING" not in codes
+        assert "EXPR_NOW_LOW_POLLING" not in codes
 
     def test_now_high_rate_ok(self, validator):
         issues = validator.validate_expression(

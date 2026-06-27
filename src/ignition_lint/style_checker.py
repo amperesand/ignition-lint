@@ -28,19 +28,19 @@ class StyleChecker:
 
         # Define regex patterns for different naming styles
         self.style_patterns = {
-            "snake_case": r"^[a-z]+(_[a-z]+)*$"
+            "snake_case": r"^[a-z][a-z0-9]*(_[a-z][a-z0-9]*)*$"
             if not allow_acronyms
-            else r"^[a-z]+(_[a-zA-Z]+)*$",
-            "camelCase": r"^[a-z]+([A-Z][a-z]*)*$"
+            else r"^[a-z][a-zA-Z0-9]*(_[a-zA-Z][a-zA-Z0-9]*)*$",
+            "camelCase": r"^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$"
             if not allow_acronyms
-            else r"^[a-z]+([A-Z][a-zA-Z]*)*$",
-            "PascalCase": r"^[A-Z][a-z]*([A-Z][a-z]*)*$"
+            else r"^[a-z][a-zA-Z0-9]*([A-Z][a-zA-Z0-9]*)*$",
+            "PascalCase": r"^[A-Z][a-z0-9]*([A-Z][a-z0-9]*)*$"
             if not allow_acronyms
-            else r"^[A-Z][a-zA-Z]*([A-Z][a-zA-Z]*)*$",
-            "UPPER_CASE": r"^[A-Z]+(_[A-Z]+)*$",
-            "Title Case": r"^[A-Z][a-z]*( [A-Z][a-z]*)*$"
+            else r"^[A-Z][a-zA-Z0-9]*([A-Z][a-zA-Z0-9]*)*$",
+            "UPPER_CASE": r"^[A-Z][A-Z0-9]*(_[A-Z][A-Z0-9]*)*$",
+            "Title Case": r"^[A-Z][a-z0-9]*( [A-Z][a-z0-9]*)*$"
             if not allow_acronyms
-            else r"^[A-Z][a-zA-Z]*( [A-Z][a-zA-Z]*)*$",
+            else r"^[A-Z][a-zA-Z0-9]*( [A-Z][a-zA-Z0-9]*)*$",
             "any": r".*",  # Matches any string
         }
 

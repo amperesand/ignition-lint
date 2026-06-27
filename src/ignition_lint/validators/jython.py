@@ -451,25 +451,22 @@ class JythonValidator:
                 )
             )
 
-        for func in ["getChild", "getSibling", "sendMessage", "closePopup"]:
-            if func in script and "try:" not in script:
-                self.issues.append(
-                    JythonIssue(
-                        severity=LintSeverity.INFO,
-                        code="JYTHON_RECOMMEND_ERROR_HANDLING",
-                        message=f"Consider wrapping {func} usage in error handling.",
-                    )
-                )
-
-        # Flag fragile component tree traversal
-        for func in ["getSibling", "getParent", "getChild", "getComponent"]:
-            if re.search(rf"\b{func}\s*\(", script):
+        # Flag fragile component tree traversal. Named getChild/getSibling lookups
+        # are common Perspective event-script practice; warn only when the lookup
+        # is positional/dynamic, or for APIs that are inherently more brittle.
+        fragile_ref_patterns = [
+            (r"\bget(?:Child|Sibling)\s*\(\s*[^'\"]", "positional or dynamic component lookup"),
+            (r"\bgetParent\s*\(", "parent component traversal"),
+            (r"\bgetComponent\s*\(", "legacy component lookup"),
+        ]
+        for pattern, description in fragile_ref_patterns:
+            if re.search(pattern, script):
                 self.issues.append(
                     JythonIssue(
                         severity=LintSeverity.STYLE,
                         code="JYTHON_BAD_COMPONENT_REF",
-                        message=f"Component tree traversal '{func}()' is fragile and breaks on refactoring",
-                        suggestion="Use view custom properties or message handlers instead",
+                        message=f"Fragile component tree traversal detected: {description}",
+                        suggestion="Prefer named local lookups, view custom properties, or message handlers",
                     )
                 )
 

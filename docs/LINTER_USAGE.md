@@ -65,7 +65,7 @@ ignition-lint --project /path/to/project --verbose
 - **Missing content** - Labels without text, missing child positioning
 - **Accessibility concerns** - Interactive elements without proper labeling
 - **Polling issues** - `now()` without explicit rate defaults to 1 000 ms
-- **Fragile references** - `getSibling()`, `getParent()`, `getChild()` in scripts or expressions
+- **Fragile references** - positional/dynamic component lookup in scripts or component traversal in expressions
 - **Unused properties** - Custom properties defined but never referenced
 
 ### ℹ️ INFO (Informational)
@@ -73,7 +73,7 @@ ignition-lint --project /path/to/project --verbose
 - **Best practice suggestions** - Recommendations for better structure
 - **Layout recommendations** - Flex container usage patterns
 - **Unknown functions** - Expression functions not in the known Ignition catalog
-- **Low polling rates** - `now(N)` with N < 5 000 ms
+- **Sub-second polling rates** - `now(N)` with 0 < N < 1 000 ms
 
 ### 💄 STYLE (Cosmetic)
 - **Generic naming** - Components with non-descriptive names

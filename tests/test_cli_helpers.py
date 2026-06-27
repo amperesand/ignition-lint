@@ -2,6 +2,7 @@ from ignition_lint.action_entry import build_cli_args
 from ignition_lint.cli import configure_console_encoding, determine_checks
 from ignition_lint.json_linter import JsonLinter
 from ignition_lint.reporting import LintIssue, LintReport, LintSeverity
+from ignition_lint.style_checker import StyleChecker
 
 
 def test_determine_checks_profile_defaults():
@@ -195,3 +196,64 @@ class TestRootComponentNaming:
         linter._check_json_structure(data, "test.json")
         component_errors = [e for e in linter.errors if e.error_type == "component"]
         assert len(component_errors) == 0
+
+    def test_title_case_component_name_passes_default_pascalcase_policy(self):
+        linter = JsonLinter(component_style="PascalCase")
+        data = {
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "MES Station ID Editor"},
+                "children": [],
+            }
+        }
+        linter._check_json_structure(data, "test.json")
+        component_errors = [e for e in linter.errors if e.error_type == "component"]
+        assert len(component_errors) == 0
+
+    def test_custom_component_regex_does_not_allow_title_case_fallback(self):
+        linter = JsonLinter(component_style_rgx=r"^[A-Z][a-z]+$")
+        data = {
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "MES Station ID Editor"},
+                "children": [],
+            }
+        }
+        linter._check_json_structure(data, "test.json")
+        component_errors = [e for e in linter.errors if e.error_type == "component"]
+        assert {e.name for e in component_errors} == {"MES Station ID Editor"}
+
+    def test_non_component_name_fields_are_not_component_names(self):
+        linter = JsonLinter(component_style="PascalCase")
+        data = {
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "props": {
+                    "breakpoints": [
+                        {"name": "sm"},
+                        {"name": "md"},
+                    ],
+                    "items": [{"name": "process step one"}],
+                },
+                "children": [],
+            }
+        }
+        linter._check_json_structure(data, "test.json")
+        component_errors = [e for e in linter.errors if e.error_type == "component"]
+        assert len(component_errors) == 0
+
+
+def test_style_checker_allows_numbered_pascalcase_names():
+    checker = StyleChecker("PascalCase")
+
+    assert checker.is_correct_style("Fastener1")
+    assert checker.is_correct_style("Ref1Btn")
+    assert checker.is_correct_style("CalibrationRef3Marker")
+
+
+def test_style_checker_allows_numbered_camelcase_names():
+    checker = StyleChecker("camelCase")
+
+    assert checker.is_correct_style("station1Name")
+    assert checker.is_correct_style("step330Result")

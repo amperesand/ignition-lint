@@ -163,7 +163,6 @@ JythonIssue(
 |------|-------------|-----|
 | `JYTHON_INCONSISTENT_INDENT_STYLE` | Mixed tab/space styles | Use tabs consistently |
 | `JYTHON_PRINT_STATEMENT` | Using `print()` vs `system.perspective.print()` | Use Ignition logging |
-| `JYTHON_RECOMMEND_ERROR_HANDLING` | Component navigation without error handling | Add try/catch blocks |
 
 ---
 

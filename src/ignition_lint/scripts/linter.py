@@ -110,7 +110,6 @@ class IgnitionScriptLinter:
         # Python 2.7 vs 3.x compatibility issues
         self.python2_patterns = {
             "print_statement": re.compile(r"\bprint\s+[^(]"),
-            "string_types": re.compile(r"\bbasestring\b|\bunicode\b"),
             "xrange": re.compile(r"\bxrange\b"),
             "iteritems": re.compile(r"\.iteritems\(\)"),
             "iterkeys": re.compile(r"\.iterkeys\(\)"),
@@ -120,13 +119,6 @@ class IgnitionScriptLinter:
             "raw_input": re.compile(r"\braw_input\b"),
             "reduce": re.compile(r"\breduce\("),
             "reload": re.compile(r"\breload\("),
-        }
-
-        # Common Java integration patterns in Ignition
-        self.java_patterns = {
-            "java_import": re.compile(r"^from\s+(java\.|com\.|org\.)\w+"),
-            "java_class": re.compile(r"\b[A-Z]\w*\.[A-Z]\w*"),
-            "java_method": re.compile(r"\.get[A-Z]\w*\(|\.set[A-Z]\w*\("),
         }
 
         # Common Ignition anti-patterns
@@ -262,7 +254,6 @@ class IgnitionScriptLinter:
             self._check_jython_compatibility(file_path, content, lines)
             self._check_ignition_patterns(file_path, content, lines)
             self._check_code_quality(file_path, content, lines)
-            self._check_java_integration(file_path, content, lines)
 
         except Exception as e:
             self.issues.append(
@@ -358,19 +349,6 @@ class IgnitionScriptLinter:
                     )
                 )
 
-            # Check for string type issues
-            if self.python2_patterns["string_types"].search(line):
-                self._add_issue(
-                    ScriptLintIssue(
-                        severity=LintSeverity.INFO,
-                        code="JYTHON_STRING_TYPES",
-                        message="basestring/unicode types are Jython-specific",
-                        file_path=str(file_path),
-                        line_number=line_num,
-                        suggestion="Use str only when Python 3 portability is required",
-                    )
-                )
-
     def _check_ignition_patterns(self, file_path: Path, content: str, lines: list[str]):
         """Check for Ignition-specific patterns and best practices."""
 
@@ -448,33 +426,6 @@ class IgnitionScriptLinter:
                                 suggestion="Verify function exists in Ignition documentation",
                             )
                         )
-
-    def _check_java_integration(self, file_path: Path, content: str, lines: list[str]):
-        """Check for Java integration patterns."""
-
-        java_imports_found = []
-        java_usage_found = []
-
-        for line_num, line in enumerate(lines, 1):
-            # Check for Java imports
-            if self.java_patterns["java_import"].search(line):
-                java_imports_found.append((line_num, line.strip()))
-
-            # Check for Java-style method calls
-            if self.java_patterns["java_method"].search(line):
-                java_usage_found.append((line_num, line.strip()))
-
-        # Report Java integration patterns (informational)
-        if java_imports_found:
-            self._add_issue(
-                ScriptLintIssue(
-                    severity=LintSeverity.INFO,
-                    code="JAVA_INTEGRATION_DETECTED",
-                    message=f"Java imports detected ({len(java_imports_found)} imports)",
-                    file_path=str(file_path),
-                    suggestion="Ensure Java classes are available in Ignition classpath",
-                )
-            )
 
     def _check_code_quality(self, file_path: Path, content: str, lines: list[str]):
         """Check for general code quality issues."""

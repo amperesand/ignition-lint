@@ -61,6 +61,39 @@ def test_standalone_script_linter_accepts_jython_exception_syntax(tmp_path):
     assert "JYTHON_PRINT_STATEMENT" in codes
 
 
+def test_standalone_script_linter_accepts_jython_string_types_and_java_imports(tmp_path):
+    script_dir = tmp_path / "script-python"
+    script_dir.mkdir()
+    (script_dir / "code.py").write_text(
+        "\n".join(
+            [
+                "from java.io import File",
+                "",
+                "try:",
+                "    basestring",
+                "except NameError:",
+                "    basestring = str",
+                "",
+                "try:",
+                "    unicode",
+                "except NameError:",
+                "    unicode = str",
+                "",
+                "path = unicode(File('/tmp/example.txt').getPath())",
+                "is_text = isinstance(path, basestring)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    linter = IgnitionScriptLinter()
+    linter.lint_directory(str(script_dir))
+
+    codes = _script_codes(linter)
+    assert "JYTHON_STRING_TYPES" not in codes
+    assert "JAVA_INTEGRATION_DETECTED" not in codes
+
+
 def test_expression_escaped_quotes_inside_date_format_are_one_string():
     expression = r"dateFormat(addDays(now(0), -7), 'yyyy-MM-dd\'T\'00:00:00')"
 
@@ -406,6 +439,66 @@ def test_textual_label_without_text_still_warns():
     assert all(i.severity == LintSeverity.WARNING for i in matching)
 
 
+def test_button_with_bound_text_is_accessibility_labeled():
+    issues = _lint_view(
+        {
+            "custom": {"enabled": True},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "children": [
+                    {
+                        "type": "ia.input.button",
+                        "meta": {"name": "Button"},
+                        "propConfig": {
+                            "props.text": {
+                                "binding": {
+                                    "type": "expr",
+                                    "config": {
+                                        "expression": "if({view.custom.enabled}, 'Disable', 'Enable')"
+                                    },
+                                }
+                            }
+                        },
+                    }
+                ],
+            },
+        }
+    )
+
+    assert "ACCESSIBILITY_LABELING" not in {i.code for i in issues}
+
+
+def test_table_without_large_static_data_has_no_performance_advisory():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.display.table",
+                "meta": {"name": "ResultsTable"},
+                "props": {"data": []},
+            },
+        }
+    )
+
+    assert "PERFORMANCE_CONSIDERATION" not in {i.code for i in issues}
+
+
+def test_large_static_table_data_has_performance_advisory():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.display.table",
+                "meta": {"name": "ResultsTable"},
+                "props": {"data": [{"value": i} for i in range(101)]},
+            },
+        }
+    )
+
+    assert "PERFORMANCE_CONSIDERATION" in {i.code for i in issues}
+
+
 def test_flex_children_do_not_require_position_objects():
     issues = _lint_view(
         {
@@ -421,6 +514,45 @@ def test_flex_children_do_not_require_position_objects():
     )
 
     assert "MISSING_CHILD_POSITION" not in {i.code for i in issues}
+
+
+def test_styled_single_child_flex_is_not_flagged():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "props": {
+                    "direction": "row",
+                    "style": {"padding": "8px"},
+                },
+                "children": [
+                    {"type": "ia.display.label", "meta": {"name": "StatusLabel"}}
+                ],
+            },
+        }
+    )
+
+    assert "SINGLE_CHILD_FLEX" not in {i.code for i in issues}
+
+
+def test_empty_single_child_flex_is_flagged():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "props": {"direction": "row"},
+                "children": [
+                    {"type": "ia.display.label", "meta": {"name": "StatusLabel"}}
+                ],
+            },
+        }
+    )
+
+    assert "SINGLE_CHILD_FLEX" in {i.code for i in issues}
 
 
 def test_breakpoint_children_do_not_require_position_objects():

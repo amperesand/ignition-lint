@@ -146,6 +146,49 @@ class TestUnusedProperties:
         issues = _lint_view(view)
         assert "UNUSED_CUSTOM_PROPERTY" not in _codes(issues)
 
+    def test_view_level_self_custom_reference_passes(self):
+        view = {
+            "custom": {"initialized": False},
+            "params": {"source": ""},
+            "propConfig": {
+                "params.source": {
+                    "onChange": {
+                        "script": (
+                            "\tif not self.custom.initialized:\n"
+                            "\t\tself.custom.initialized = True"
+                        )
+                    }
+                }
+            },
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "children": [],
+            },
+        }
+        issues = _lint_view(view)
+        assert "UNUSED_CUSTOM_PROPERTY" not in _codes(issues)
+
+    def test_view_level_self_params_reference_passes(self):
+        view = {
+            "custom": {},
+            "params": {"source": ""},
+            "propConfig": {
+                "params.source": {
+                    "onChange": {
+                        "script": "\tself.params.source = str(currentValue.value or '')"
+                    }
+                }
+            },
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "children": [],
+            },
+        }
+        issues = _lint_view(view)
+        assert "UNUSED_PARAM_PROPERTY" not in _codes(issues)
+
     def test_unused_param_info(self):
         view = {
             "custom": {},

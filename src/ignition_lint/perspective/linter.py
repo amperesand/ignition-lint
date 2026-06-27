@@ -72,11 +72,6 @@ class IgnitionPerspectiveLinter:
             "preferred_containers": ["ia.container.flex"],
             "deprecated_patterns": [],
             "required_meta_properties": ["name"],
-            "performance_concerns": {
-                "ia.display.flex-repeater": "Consider performance impact with large datasets",
-                "ia.display.table": "Large tables may impact rendering performance",
-                "ia.chart.xy": "Complex charts with many data points may be slow",
-            },
         }
 
     def _load_schema(self, schema_path: str) -> dict:
@@ -335,18 +330,9 @@ class IgnitionPerspectiveLinter:
                 )
             )
 
-        # Check for performance concerns
-        if comp_type in self.best_practices["performance_concerns"]:
-            self.issues.append(
-                LintIssue(
-                    severity=LintSeverity.INFO,
-                    code="PERFORMANCE_CONSIDERATION",
-                    message=self.best_practices["performance_concerns"][comp_type],
-                    file_path=file_path,
-                    component_path=component_path,
-                    component_type=comp_type,
-                )
-            )
+        self._check_component_performance(
+            component, file_path, component_path, comp_type
+        )
 
         # Check for missing position properties only in coordinate containers.
         # Flex, column, tab, and breakpoint children can be valid without serialized
@@ -379,8 +365,18 @@ class IgnitionPerspectiveLinter:
             props = component.get("props", {})
             children = component.get("children", [])
 
-            # Single child in flex container might be unnecessary
-            if len(children) == 1:
+            # Single child in a flex container is only actionable when the
+            # wrapper has no layout/style/binding behavior of its own.
+            props_without_direction = (
+                {key: value for key, value in props.items() if key != "direction"}
+                if isinstance(props, dict)
+                else {}
+            )
+            has_wrapper_behavior = any(
+                key in component for key in ("position", "propConfig", "events")
+            ) or bool(props_without_direction)
+
+            if len(children) == 1 and not has_wrapper_behavior:
                 self.issues.append(
                     LintIssue(
                         severity=LintSeverity.STYLE,
@@ -528,6 +524,44 @@ class IgnitionPerspectiveLinter:
 
         return False
 
+    def _check_component_performance(
+        self, component: dict, file_path: str, component_path: str, comp_type: str
+    ) -> None:
+        """Flag concrete static data sizes that may affect client rendering."""
+        props = component.get("props", {})
+        if not isinstance(props, dict):
+            return
+
+        if comp_type == "ia.display.table":
+            data = props.get("data")
+            if isinstance(data, list) and len(data) > 100:
+                self.issues.append(
+                    LintIssue(
+                        severity=LintSeverity.INFO,
+                        code="PERFORMANCE_CONSIDERATION",
+                        message=f"Table contains {len(data)} static rows",
+                        file_path=file_path,
+                        component_path=component_path,
+                        component_type=comp_type,
+                        suggestion="Use pagination, filtering, or a binding that limits rows rendered in the client",
+                    )
+                )
+
+        if comp_type == "ia.display.flex-repeater":
+            instances = props.get("instances")
+            if isinstance(instances, list) and len(instances) > 100:
+                self.issues.append(
+                    LintIssue(
+                        severity=LintSeverity.INFO,
+                        code="PERFORMANCE_CONSIDERATION",
+                        message=f"Flex repeater contains {len(instances)} static instances",
+                        file_path=file_path,
+                        component_path=component_path,
+                        component_type=comp_type,
+                        suggestion="Use pagination, filtering, or a binding that limits rendered instances",
+                    )
+                )
+
     def check_component_accessibility(
         self, component: dict, file_path: str, component_path: str
     ):
@@ -545,10 +579,12 @@ class IgnitionPerspectiveLinter:
 
         if comp_type in interactive_types:
             props = component.get("props", {})
+            prop_config = component.get("propConfig", {})
             meta = component.get("meta", {})
 
             # Check for descriptive text or aria labels
             has_text = "text" in props
+            has_text_binding = "props.text" in prop_config
             has_placeholder = "placeholder" in props
             has_name = "name" in meta and meta["name"] not in [
                 "Component",
@@ -556,7 +592,7 @@ class IgnitionPerspectiveLinter:
                 "Input",
             ]
 
-            if not (has_text or has_placeholder or has_name):
+            if not (has_text or has_text_binding or has_placeholder or has_name):
                 self.issues.append(
                     LintIssue(
                         severity=LintSeverity.INFO,
@@ -1260,6 +1296,12 @@ class IgnitionPerspectiveLinter:
         # Collect all strings and propConfig keys from the entire view
         all_strings = self._collect_all_strings(view_data)
         all_text = "\n".join(all_strings)
+        view_level_prop_config = view_data.get("propConfig", {})
+        view_level_text = (
+            "\n".join(self._collect_all_strings(view_level_prop_config))
+            if isinstance(view_level_prop_config, dict)
+            else ""
+        )
         propconfig_keys = self._collect_propconfig_keys(view_data)
 
         # Check custom properties
@@ -1268,11 +1310,13 @@ class IgnitionPerspectiveLinter:
                 # Search for references in expressions, scripts, and propConfig keys
                 expr_ref = f"view.custom.{prop_name}"
                 script_ref = f"self.view.custom.{prop_name}"
+                view_script_ref = f"self.custom.{prop_name}"
                 binding_target = f"custom.{prop_name}"
 
                 found = (
                     expr_ref in all_text
                     or script_ref in all_text
+                    or view_script_ref in view_level_text
                     or binding_target in propconfig_keys
                 )
                 if not found:
@@ -1293,11 +1337,13 @@ class IgnitionPerspectiveLinter:
             for prop_name in params_props:
                 expr_ref = f"view.params.{prop_name}"
                 script_ref = f"self.view.params.{prop_name}"
+                view_script_ref = f"self.params.{prop_name}"
                 binding_target = f"params.{prop_name}"
 
                 found = (
                     expr_ref in all_text
                     or script_ref in all_text
+                    or view_script_ref in view_level_text
                     or binding_target in propconfig_keys
                 )
                 if not found:

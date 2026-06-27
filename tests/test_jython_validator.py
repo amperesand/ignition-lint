@@ -27,12 +27,28 @@ def test_detects_best_practices():
     assert "JYTHON_HTTP_WITHOUT_EXCEPTION_HANDLING" in codes
 
 
-def test_component_tree_traversal_is_style_advice():
+def test_named_component_lookup_is_allowed():
     issues = validate("\treturn self.getSibling('Status').props.text")
+    assert "JYTHON_BAD_COMPONENT_REF" not in {issue.code for issue in issues}
+
+
+def test_positional_component_tree_traversal_is_style_advice():
+    issues = validate("\treturn self.getSibling(0).props.text")
     matching = [issue for issue in issues if issue.code == "JYTHON_BAD_COMPONENT_REF"]
 
     assert matching
     assert all(issue.severity == LintSeverity.STYLE for issue in matching)
+
+
+def test_component_lookup_does_not_trigger_generic_error_handling_advice():
+    issues = validate(
+        "\tself.getSibling('Status').props.text = 'Ready'\n"
+        "\tsystem.perspective.sendMessage('refresh')\n"
+        "\tsystem.perspective.closePopup('dialog')"
+    )
+    codes = {issue.code for issue in issues}
+
+    assert "JYTHON_RECOMMEND_ERROR_HANDLING" not in codes
 
 
 def test_clean_script_produces_no_issues():
