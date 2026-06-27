@@ -65,6 +65,10 @@ inputs:
     description: 'Minimum severity that causes a non-zero exit (error, warning, info, style)'
     required: false
     default: 'error'
+  report_min_severity:
+    description: 'Lowest severity included in output (error, warning, info, style)'
+    required: false
+    default: 'style'
   component:
     description: 'Filter Perspective linting to a specific component type prefix (e.g. ia.display.label)'
     required: false
@@ -124,6 +128,7 @@ runs:
         INPUT_IGNORE_FILE: ${{ inputs.ignore_file }}
         INPUT_SCHEMA_MODE: ${{ inputs.schema_mode }}
         INPUT_FAIL_ON: ${{ inputs.fail_on }}
+        INPUT_REPORT_MIN_SEVERITY: ${{ inputs.report_min_severity }}
         INPUT_REPORT_FORMAT: ${{ inputs.report_format }}
         INPUT_COMPONENT: ${{ inputs.component }}
       run: ignition-lint-action

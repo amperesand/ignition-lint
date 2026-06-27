@@ -84,6 +84,19 @@ class LintReport:
     def merge(self, other: LintReport) -> None:
         self.extend(other.issues)
 
+    def filter_min_severity(self, threshold: LintSeverity) -> None:
+        """Keep only issues at or above the requested severity threshold."""
+        self.issues = [
+            issue
+            for issue in self.issues
+            if issue.severity.fails_threshold(threshold)
+        ]
+        self.summary = {}
+        for issue in self.issues:
+            self.summary[issue.severity.value] = (
+                self.summary.get(issue.severity.value, 0) + 1
+            )
+
 
 def format_report_text(report: LintReport) -> str:
     """Pretty-print a lint report."""

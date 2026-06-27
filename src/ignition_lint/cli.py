@@ -267,6 +267,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Severity threshold that causes a non-zero exit code",
     )
     parser.add_argument(
+        "--report-min-severity",
+        choices=[level.value for level in LintSeverity],
+        default=LintSeverity.STYLE.value,
+        help="Lowest severity included in output; use warning for CI enforcement",
+    )
+    parser.add_argument(
         "--check-linter",
         action="store_true",
         help="Verify schema assets are available and exit",
@@ -298,6 +304,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     report = LintReport(suppression=suppression)
     fail_threshold = LintSeverity.from_string(args.fail_on)
+    report_threshold = LintSeverity.from_string(args.report_min_severity)
 
     if args.files:
         patterns = [
@@ -397,6 +404,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         print("❌ One of --project, --target, or --files is required", file=sys.stderr)
         return 1
+
+    report.filter_min_severity(report_threshold)
 
     if args.report_format == "json":
         output = {

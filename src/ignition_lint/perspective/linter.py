@@ -443,7 +443,11 @@ class IgnitionPerspectiveLinter:
             has_text = "text" in props
             has_text_binding = "props.text" in prop_config
 
-            if not has_text and not has_text_binding:
+            if (
+                not has_text
+                and not has_text_binding
+                and not self._is_non_textual_label(component)
+            ):
                 self.issues.append(
                     LintIssue(
                         severity=LintSeverity.WARNING,
@@ -476,6 +480,53 @@ class IgnitionPerspectiveLinter:
                         suggestion="Add 'props.path' with icon reference or bind it via 'propConfig.props.path'",
                     )
                 )
+
+    @staticmethod
+    def _is_non_textual_label(component: dict) -> bool:
+        """Return true when a Perspective label is clearly used as a visual primitive."""
+        props = component.get("props", {})
+        if not isinstance(props, dict):
+            props = {}
+
+        style = props.get("style", {})
+        if not isinstance(style, dict):
+            style = {}
+
+        # Designer exports often use empty labels as layout spacers.
+        if not props and "position" in component:
+            return True
+
+        color = str(style.get("color", "")).strip().lower()
+        background = str(style.get("backgroundColor", "")).strip().lower()
+        font_size = str(style.get("fontSize", "")).strip().lower()
+
+        if color == "transparent" or font_size in {"0", "0px", "0em", "0rem"}:
+            return True
+
+        visual_style_keys = {"backgroundColor", "backgroundImage"}
+        has_visual_decoration = any(
+            key in style or any(str(k).startswith("border") for k in style)
+            for key in visual_style_keys
+        )
+        text_style_keys = {
+            "color",
+            "fontFamily",
+            "fontSize",
+            "fontStyle",
+            "fontWeight",
+            "lineHeight",
+            "textAlign",
+            "textDecoration",
+            "textShadow",
+        }
+        if has_visual_decoration and not any(key in style for key in text_style_keys):
+            return True
+
+        # Labels are sometimes used as transparent click/capture layers.
+        if component.get("events") and background == "transparent":
+            return True
+
+        return False
 
     def check_component_accessibility(
         self, component: dict, file_path: str, component_path: str
@@ -1227,7 +1278,7 @@ class IgnitionPerspectiveLinter:
                 if not found:
                     self.issues.append(
                         LintIssue(
-                            severity=LintSeverity.WARNING,
+                            severity=LintSeverity.INFO,
                             code="UNUSED_CUSTOM_PROPERTY",
                             message=f"Custom property '{prop_name}' appears unreferenced in this view",
                             file_path=file_path,

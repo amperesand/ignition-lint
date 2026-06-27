@@ -27,6 +27,14 @@ def test_detects_best_practices():
     assert "JYTHON_HTTP_WITHOUT_EXCEPTION_HANDLING" in codes
 
 
+def test_component_tree_traversal_is_style_advice():
+    issues = validate("\treturn self.getSibling('Status').props.text")
+    matching = [issue for issue in issues if issue.code == "JYTHON_BAD_COMPONENT_REF"]
+
+    assert matching
+    assert all(issue.severity == LintSeverity.STYLE for issue in matching)
+
+
 def test_clean_script_produces_no_issues():
     script = "\ttry:\n\t\treturn system.date.now()\n\texcept Exception as err:\n\t\tsystem.perspective.print(str(err))"
     assert validate(script) == []

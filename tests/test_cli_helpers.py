@@ -1,6 +1,7 @@
 from ignition_lint.action_entry import build_cli_args
 from ignition_lint.cli import configure_console_encoding, determine_checks
 from ignition_lint.json_linter import JsonLinter
+from ignition_lint.reporting import LintIssue, LintReport, LintSeverity
 
 
 def test_determine_checks_profile_defaults():
@@ -29,6 +30,7 @@ def test_action_args_support_target_full_profile():
             "INPUT_PROFILE": "full",
             "INPUT_SCHEMA_MODE": "robust",
             "INPUT_FAIL_ON": "error",
+            "INPUT_REPORT_MIN_SEVERITY": "warning",
             "INPUT_REPORT_FORMAT": "json",
         }
     )
@@ -42,9 +44,44 @@ def test_action_args_support_target_full_profile():
         "robust",
         "--fail-on",
         "error",
+        "--report-min-severity",
+        "warning",
         "--report-format",
         "json",
     ]
+
+
+def test_report_min_severity_filter_rebuilds_summary():
+    report = LintReport()
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.ERROR,
+            code="ERR",
+            message="error",
+            file_path="view.json",
+        )
+    )
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.WARNING,
+            code="WARN",
+            message="warning",
+            file_path="view.json",
+        )
+    )
+    report.add_issue(
+        LintIssue(
+            severity=LintSeverity.INFO,
+            code="INFO",
+            message="info",
+            file_path="view.json",
+        )
+    )
+
+    report.filter_min_severity(LintSeverity.WARNING)
+
+    assert [issue.code for issue in report.issues] == ["ERR", "WARN"]
+    assert report.summary == {"error": 1, "warning": 1}
 
 
 def test_action_args_preserve_legacy_lint_type_all():

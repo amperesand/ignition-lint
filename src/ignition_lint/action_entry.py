@@ -64,6 +64,7 @@ def build_cli_args(env: Mapping[str, str] | None = None) -> list[str]:
     _add_option(args, "--parameter-style-rgx", env.get("INPUT_PARAMETER_STYLE_RGX"))
     _add_option(args, "--schema-mode", env.get("INPUT_SCHEMA_MODE"))
     _add_option(args, "--fail-on", env.get("INPUT_FAIL_ON"))
+    _add_option(args, "--report-min-severity", env.get("INPUT_REPORT_MIN_SEVERITY"))
     _add_option(args, "--report-format", env.get("INPUT_REPORT_FORMAT"))
     _add_option(args, "--ignore-codes", env.get("INPUT_IGNORE_CODES"))
     _add_option(args, "--ignore-file", env.get("INPUT_IGNORE_FILE"))

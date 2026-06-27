@@ -320,6 +320,92 @@ def test_inline_jython_allows_localhost_guard_without_localhost_url():
     assert "JYTHON_HARDCODED_LOCALHOST" not in {i.code for i in issues}
 
 
+def test_visual_or_spacer_labels_do_not_require_text():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.container.coord",
+                "meta": {"name": "Root"},
+                "children": [
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "Spacer"},
+                        "position": {"height": 10, "width": 10},
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "Fastener1"},
+                        "position": {"height": 44, "width": 44},
+                        "props": {
+                            "style": {
+                                "border": "6px solid var(--amp-info)",
+                                "borderRadius": "50%",
+                                "color": "transparent",
+                                "fontSize": "0px",
+                            }
+                        },
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "ClickLayer"},
+                        "events": {"dom": {"onClick": {"type": "script"}}},
+                        "props": {"style": {"backgroundColor": "transparent"}},
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "Divider"},
+                        "position": {"height": 3, "width": 315},
+                        "props": {
+                            "style": {
+                                "backgroundImage": "linear-gradient(90deg, transparent, #ccc, transparent)"
+                            }
+                        },
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "LineBreak"},
+                        "position": {"shrink": 0},
+                        "props": {
+                            "style": {
+                                "borderBottomColor": "var(--neutral-50)",
+                                "borderBottomStyle": "solid",
+                                "borderBottomWidth": "1px",
+                                "width": "250px",
+                            }
+                        },
+                    },
+                ],
+            },
+        }
+    )
+
+    assert "MISSING_LABEL_TEXT" not in {i.code for i in issues}
+
+
+def test_textual_label_without_text_still_warns():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "children": [
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "StatusLabel"},
+                        "props": {"style": {"fontWeight": "600"}},
+                    }
+                ],
+            },
+        }
+    )
+
+    matching = [i for i in issues if i.code == "MISSING_LABEL_TEXT"]
+    assert matching
+    assert all(i.severity == LintSeverity.WARNING for i in matching)
+
+
 def test_flex_children_do_not_require_position_objects():
     issues = _lint_view(
         {

@@ -93,6 +93,10 @@ class TestUnusedProperties:
         }
         issues = _lint_view(view)
         assert "UNUSED_CUSTOM_PROPERTY" in _codes(issues)
+        custom_issues = [i for i in issues if i.code == "UNUSED_CUSTOM_PROPERTY"]
+        from ignition_lint.reporting import LintSeverity
+
+        assert all(i.severity == LintSeverity.INFO for i in custom_issues)
 
     def test_used_in_expression_passes(self):
         view = {
