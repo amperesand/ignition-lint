@@ -38,9 +38,9 @@ class StyleChecker:
             if not allow_acronyms
             else r"^[A-Z][a-zA-Z0-9]*([A-Z][a-zA-Z0-9]*)*$",
             "UPPER_CASE": r"^[A-Z][A-Z0-9]*(_[A-Z][A-Z0-9]*)*$",
-            "Title Case": r"^[A-Z][a-z0-9]*( [A-Z][a-z0-9]*)*$"
+            "Title Case": r"^[A-Z][a-z0-9]*( [A-Z0-9][a-z0-9]*)*$"
             if not allow_acronyms
-            else r"^[A-Z][a-zA-Z0-9]*( [A-Z][a-zA-Z0-9]*)*$",
+            else r"^[A-Z][a-zA-Z0-9]*( [A-Z0-9][a-zA-Z0-9]*)*$",
             "any": r".*",  # Matches any string
         }
 

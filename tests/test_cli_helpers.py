@@ -1,6 +1,6 @@
-from ignition_lint.action_entry import build_cli_args
 import json
 
+from ignition_lint.action_entry import build_cli_args
 from ignition_lint.cli import (
     configure_console_encoding,
     determine_checks,
@@ -341,6 +341,14 @@ def test_style_checker_allows_numbered_pascalcase_names():
     assert checker.is_correct_style("Fastener1")
     assert checker.is_correct_style("Ref1Btn")
     assert checker.is_correct_style("CalibrationRef3Marker")
+
+
+def test_style_checker_allows_numbered_title_case_words():
+    checker = StyleChecker("Title Case")
+
+    assert checker.is_correct_style("Card Row 1")
+    assert checker.is_correct_style("Headline Line 4")
+    assert checker.is_correct_style("Step 330 Result")
 
 
 def test_style_checker_allows_numbered_camelcase_names():
