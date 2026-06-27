@@ -447,9 +447,10 @@ class IgnitionScriptLinter:
         # Check for missing docstrings in functions
         try:
             tree = self._parse_jython_ast(content)
-            for node in ast.walk(tree):
+            for node in tree.body:
                 if isinstance(node, ast.FunctionDef):
-                    # Skip dunder methods and private functions
+                    # Project script top-level functions are the public API.
+                    # Nested callbacks/helpers should not need docstrings.
                     if node.name.startswith("_"):
                         continue
                     if not ast.get_docstring(node):

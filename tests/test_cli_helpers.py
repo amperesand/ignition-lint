@@ -1,5 +1,11 @@
 from ignition_lint.action_entry import build_cli_args
-from ignition_lint.cli import configure_console_encoding, determine_checks
+import json
+
+from ignition_lint.cli import (
+    configure_console_encoding,
+    determine_checks,
+    lint_target_directory,
+)
 from ignition_lint.json_linter import JsonLinter
 from ignition_lint.reporting import LintIssue, LintReport, LintSeverity
 from ignition_lint.style_checker import StyleChecker
@@ -151,6 +157,91 @@ def test_configure_console_encoding_uses_utf8_when_available(monkeypatch):
         {"encoding": "utf-8", "errors": "replace"},
         {"encoding": "utf-8", "errors": "replace"},
     ]
+
+
+def test_target_lint_uses_same_project_scripts_for_view_custom_refs(tmp_path):
+    projects = tmp_path / "projects"
+    pilot = projects / "pilot_line"
+    sample = projects / "samplequickstart"
+
+    for project in (pilot, sample):
+        view_dir = (
+            project
+            / "com.inductiveautomation.perspective"
+            / "views"
+            / "Screens"
+            / "Editor"
+        )
+        view_dir.mkdir(parents=True)
+        (view_dir / "view.json").write_text(
+            json.dumps(
+                {
+                    "custom": {
+                        "transitionRows": [],
+                        "localOnly": [],
+                    },
+                    "root": {
+                        "type": "ia.container.flex",
+                        "meta": {"name": "Root"},
+                        "children": [],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    script_dir = pilot / "ignition" / "script-python" / "manualSequence" / "v2Admin"
+    script_dir.mkdir(parents=True)
+    (script_dir / "code.py").write_text(
+        "\n".join(
+            [
+                "def refresh(view):",
+                '    """Refresh the editor rows."""',
+                "    view.custom.transitionRows = []",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    report = lint_target_directory(
+        projects,
+        schema_mode="robust",
+        component_type=None,
+        checks=determine_checks("full", None, False),
+        component_style="PascalCase",
+        parameter_style="camelCase",
+        component_style_rgx=None,
+        parameter_style_rgx=None,
+        allow_acronyms=False,
+        include_advisory=True,
+    )
+
+    unused = [issue for issue in report.issues if issue.code == "UNUSED_CUSTOM_PROPERTY"]
+    by_file_and_prop = {
+        (issue.file_path, issue.component_path)
+        for issue in unused
+    }
+
+    pilot_view = str(
+        pilot
+        / "com.inductiveautomation.perspective"
+        / "views"
+        / "Screens"
+        / "Editor"
+        / "view.json"
+    )
+    sample_view = str(
+        sample
+        / "com.inductiveautomation.perspective"
+        / "views"
+        / "Screens"
+        / "Editor"
+        / "view.json"
+    )
+
+    assert (pilot_view, "custom.transitionRows") not in by_file_and_prop
+    assert (pilot_view, "custom.localOnly") in by_file_and_prop
+    assert (sample_view, "custom.transitionRows") in by_file_and_prop
 
 
 class TestRootComponentNaming:

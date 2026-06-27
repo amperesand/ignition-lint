@@ -1285,7 +1285,20 @@ class IgnitionPerspectiveLinter:
                 keys.update(IgnitionPerspectiveLinter._collect_propconfig_keys(item))
         return keys
 
-    def _check_unused_properties(self, view_data: dict, file_path: str):
+    @staticmethod
+    def _contains_property_ref(text: str, scope: str, prop_name: str) -> bool:
+        """Return true when text references a view property with token boundaries."""
+        if not text:
+            return False
+        prop = re.escape(prop_name)
+        pattern = re.compile(
+            rf"(?<![\w.])(?:self\.view\.{scope}|self\.{scope}|view\.{scope})\.{prop}(?![\w])"
+        )
+        return bool(pattern.search(text))
+
+    def _check_unused_properties(
+        self, view_data: dict, file_path: str, external_reference_text: str = ""
+    ):
         """Check for custom and param properties that appear unreferenced within the view."""
         custom_props = view_data.get("custom", {})
         params_props = view_data.get("params", {})
@@ -1318,6 +1331,9 @@ class IgnitionPerspectiveLinter:
                     or script_ref in all_text
                     or view_script_ref in view_level_text
                     or binding_target in propconfig_keys
+                    or self._contains_property_ref(
+                        external_reference_text, "custom", prop_name
+                    )
                 )
                 if not found:
                     self.issues.append(
@@ -1345,6 +1361,9 @@ class IgnitionPerspectiveLinter:
                     or script_ref in all_text
                     or view_script_ref in view_level_text
                     or binding_target in propconfig_keys
+                    or self._contains_property_ref(
+                        external_reference_text, "params", prop_name
+                    )
                 )
                 if not found:
                     self.issues.append(
@@ -1811,7 +1830,10 @@ class IgnitionPerspectiveLinter:
                         break
 
     def lint_file(
-        self, file_path: str, target_component_type: str | None = None
+        self,
+        file_path: str,
+        target_component_type: str | None = None,
+        external_reference_text: str = "",
     ) -> bool:
         """Lint a single view.json file."""
         # Track starting index for issues so we only enrich new ones
@@ -1918,7 +1940,7 @@ class IgnitionPerspectiveLinter:
             self.check_component_accessibility(component, file_path, component_path)
 
         # Check for unused custom/param properties (per-view)
-        self._check_unused_properties(view_data, file_path)
+        self._check_unused_properties(view_data, file_path, external_reference_text)
 
         # Check that params have explicit paramDirection in propConfig
         self._check_param_directions(view_data, file_path)

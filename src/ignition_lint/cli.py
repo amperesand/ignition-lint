@@ -83,6 +83,44 @@ def convert_naming_errors(errors: Sequence[NamingError]) -> Iterable[LintIssue]:
         )
 
 
+def _project_root_for_view_file(view_file: Path) -> Path | None:
+    """Infer the Ignition project root that owns a Perspective view file."""
+    for parent in view_file.resolve().parents:
+        if parent.name == "com.inductiveautomation.perspective":
+            return parent.parent
+    return None
+
+
+def _read_project_script_text(project_root: Path) -> str:
+    """Read project-library scripts so view lint can see external view references."""
+    script_dir = project_root / "ignition" / "script-python"
+    if not script_dir.exists():
+        return ""
+
+    chunks: list[str] = []
+    for script_file in script_dir.rglob("*.py"):
+        try:
+            chunks.append(script_file.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+    return "\n".join(chunks)
+
+
+def _external_references_by_view_file(view_files: Iterable[Path]) -> dict[Path, str]:
+    """Map each view file to text from scripts in the same Ignition project."""
+    cache: dict[Path, str] = {}
+    references: dict[Path, str] = {}
+    for view_file in view_files:
+        resolved = view_file.resolve()
+        project_root = _project_root_for_view_file(resolved)
+        if project_root is None:
+            continue
+        if project_root not in cache:
+            cache[project_root] = _read_project_script_text(project_root)
+        references[resolved] = cache[project_root]
+    return references
+
+
 def lint_perspective(
     target: Path,
     schema_mode: str,
@@ -93,7 +131,14 @@ def lint_perspective(
     report = LintReport(include_advisory=include_advisory)
     schema_path = schema_path_for(schema_mode)
     linter = IgnitionPerspectiveLinter(str(schema_path))
-    linter.lint_project(str(target), target_component_type=component_type)
+    view_files = [Path(path) for path in linter.find_view_files(str(target))]
+    external_refs = _external_references_by_view_file(view_files)
+    for view_file in view_files:
+        linter.lint_file(
+            str(view_file),
+            target_component_type=component_type,
+            external_reference_text=external_refs.get(view_file.resolve(), ""),
+        )
     report.extend(linter.issues)
     return report
 
@@ -103,13 +148,23 @@ def lint_perspective_files(
     schema_mode: str,
     component_type: str | None,
     include_advisory: bool = False,
+    external_reference_by_file: dict[Path, str] | None = None,
 ) -> LintReport:
     """Lint an explicit list of view.json files."""
     report = LintReport(include_advisory=include_advisory)
     schema_path = schema_path_for(schema_mode)
     linter = IgnitionPerspectiveLinter(str(schema_path))
     for vf in view_files:
-        linter.lint_file(str(vf), target_component_type=component_type)
+        external_text = (
+            external_reference_by_file.get(vf.resolve(), "")
+            if external_reference_by_file
+            else ""
+        )
+        linter.lint_file(
+            str(vf),
+            target_component_type=component_type,
+            external_reference_text=external_text,
+        )
     report.extend(linter.issues)
     return report
 
@@ -149,9 +204,14 @@ def lint_target_directory(
     # Perspective checks on any view.json found
     if "perspective" in checks and view_files:
         print(f"📁 Found {len(view_files)} view.json files", file=sys.stderr)
+        external_refs = _external_references_by_view_file(view_files)
         report.merge(
             lint_perspective_files(
-                view_files, schema_mode, component_type, include_advisory
+                view_files,
+                schema_mode,
+                component_type,
+                include_advisory,
+                external_refs,
             )
         )
 

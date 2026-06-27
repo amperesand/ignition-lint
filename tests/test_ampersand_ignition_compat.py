@@ -321,6 +321,32 @@ def test_script_linter_still_flags_direct_hardcoded_localhost_gateway(tmp_path):
     assert "IGNITION_HARDCODED_GATEWAY" in _script_codes(linter)
 
 
+def test_script_linter_docstrings_only_require_top_level_public_functions(tmp_path):
+    script_dir = tmp_path / "script-python"
+    script_dir.mkdir()
+    (script_dir / "code.py").write_text(
+        "\n".join(
+            [
+                "def loginAsync(view):",
+                "    def run():",
+                "        return view",
+                "    return system.util.invokeAsynchronous(run)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    linter = IgnitionScriptLinter()
+    linter.lint_directory(str(script_dir))
+
+    missing_docstrings = [
+        issue for issue in linter.issues if issue.code == "MISSING_DOCSTRING"
+    ]
+    assert [issue.message for issue in missing_docstrings] == [
+        "Function 'loginAsync' missing docstring"
+    ]
+
+
 def test_inline_jython_allows_localhost_guard_without_localhost_url():
     issues = _lint_view(
         {
