@@ -348,13 +348,10 @@ class IgnitionPerspectiveLinter:
                 )
             )
 
-        # Check for missing position properties only in coordinate-like containers.
-        # Flex, column, and tab children can be valid without serialized position
-        # objects, so flagging every container creates noisy false positives.
-        if (
-            comp_type in {"ia.container.coord", "ia.container.breakpt"}
-            and "children" in component
-        ):
+        # Check for missing position properties only in coordinate containers.
+        # Flex, column, tab, and breakpoint children can be valid without serialized
+        # position objects, so flagging every container creates noisy false positives.
+        if comp_type == "ia.container.coord" and "children" in component:
             children = component.get("children", [])
             for i, child in enumerate(children):
                 # Position can be static (position object) or dynamic (propConfig.position.*)
@@ -1405,6 +1402,18 @@ class IgnitionPerspectiveLinter:
             custom_keys = set(custom.keys())
         if isinstance(params, dict):
             params_keys = set(params.keys())
+
+        view_prop_config = view_data.get("propConfig", {})
+        if isinstance(view_prop_config, dict):
+            for prop_name in view_prop_config:
+                if prop_name.startswith("custom."):
+                    top_key = self._extract_top_level_key(prop_name[len("custom.") :])
+                    if top_key:
+                        custom_keys.add(top_key)
+                elif prop_name.startswith("params."):
+                    top_key = self._extract_top_level_key(prop_name[len("params.") :])
+                    if top_key:
+                        params_keys.add(top_key)
 
         name_tree = self._build_component_name_tree(view_data.get("root", {}))
 

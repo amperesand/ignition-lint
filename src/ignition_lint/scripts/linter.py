@@ -193,6 +193,30 @@ class IgnitionScriptLinter:
         if not self._is_suppressed(issue.code, issue.line_number):
             self.issues.append(issue)
 
+    @staticmethod
+    def _is_configured_gateway_fallback(lines: list[str], line_index: int) -> bool:
+        """Return true when localhost is only a last-resort configured fallback."""
+        line = lines[line_index]
+
+        # Common compact form:
+        # JavaSystem.getenv("IGNITION_URL") or env.get("IGNITION_URL") or "http://localhost:8088"
+        if (
+            " or " in line
+            and ("getenv(" in line or ".get(" in line)
+            and re.search(r"['\"]https?://(?:localhost|127\.0\.0\.1):8088", line)
+        ):
+            return True
+
+        # Multi-line resolver helpers such as:
+        # _first_text(base_url, JavaSystem.getenv(...), env.get(...), "http://localhost:8088")
+        window_start = max(0, line_index - 8)
+        context = "\n".join(lines[window_start : line_index + 1])
+        return (
+            "_first_text(" in context
+            and ("getenv(" in context or ".get(" in context)
+            and re.search(r"['\"]https?://(?:localhost|127\.0\.0\.1):8088", line)
+        )
+
     def lint_directory(
         self, target_path: str, recursive: bool = True
     ) -> dict[str, Any]:
@@ -378,7 +402,9 @@ class IgnitionScriptLinter:
                 )
 
             # Check for hardcoded URLs
-            if self.antipatterns["hardcoded_gateway"].search(line):
+            if self.antipatterns["hardcoded_gateway"].search(
+                line
+            ) and not self._is_configured_gateway_fallback(lines, line_num - 1):
                 self._add_issue(
                     ScriptLintIssue(
                         severity=LintSeverity.WARNING,

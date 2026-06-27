@@ -398,7 +398,15 @@ class JythonValidator:
         _check_scope(tree.body, "")
 
     def _check_ignition_patterns(self, script: str, context: str) -> None:
-        if "localhost" in script or "127.0.0.1" in script:
+        localhost_url = re.search(
+            r"['\"]https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?:/[^'\"]*)?['\"]",
+            script,
+        )
+        bare_loopback_literal = re.search(
+            r"['\"]127\.0\.0\.1(?::\d+)?['\"]",
+            script,
+        )
+        if localhost_url or bare_loopback_literal:
             self.issues.append(
                 JythonIssue(
                     severity=LintSeverity.WARNING,

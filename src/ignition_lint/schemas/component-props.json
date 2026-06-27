@@ -1,20 +1,74 @@
 {
+  "ia.chart.chartrangeselector": [
+    "areaStyles",
+    "brushRange",
+    "enablePanZoom",
+    "selectedRange",
+    "yAxis"
+  ],
+  "ia.chart.gauge": [
+    "backgroundColor",
+    "endAngle",
+    "innerAxis",
+    "outerAxis",
+    "startAngle",
+    "style"
+  ],
   "ia.chart.pie": [
     "colors",
     "cutoutRadius",
     "data",
+    "enableTransitions",
     "labels",
     "legend",
+    "legendLabelColor",
     "showLabels",
     "showLegend",
     "style",
     "threeDimensional",
+    "title",
+    "titleColor",
     "tooltipFormat",
     "valueFormat"
   ],
-  "ia.chart.xy": [
-    "dataSources",
+  "ia.chart.powerchart": [
+    "axes",
+    "config",
+    "dataColumns",
+    "interaction",
+    "legend",
+    "pens",
+    "plots",
+    "style",
+    "timeAxis",
+    "title"
+  ],
+  "ia.chart.simple-gauge": [
+    "arc",
+    "arcBackground",
+    "endAngle",
+    "label",
+    "maxValue",
+    "startAngle",
+    "style",
+    "value"
+  ],
+  "ia.chart.timeseries": [
+    "defaultStyles",
+    "legend",
+    "plots",
     "series",
+    "style",
+    "timeRange",
+    "title",
+    "xTrace"
+  ],
+  "ia.chart.xy": [
+    "background",
+    "dataSources",
+    "legend",
+    "series",
+    "style",
     "xAxes",
     "yAxes"
   ],
@@ -22,9 +76,16 @@
     "breakpoint",
     "style"
   ],
+  "ia.container.column": [
+    "breakpoints",
+    "currentBreakpoint",
+    "gutters",
+    "style"
+  ],
   "ia.container.coord": [
     "aspectRatio",
     "mode",
+    "pipes",
     "style"
   ],
   "ia.container.flex": [
@@ -35,6 +96,9 @@
     "style",
     "wrap"
   ],
+  "ia.container.split": [
+    "orientation"
+  ],
   "ia.container.tab": [
     "contentStyle",
     "menuType",
@@ -43,12 +107,59 @@
     "tabStyle",
     "tabs"
   ],
+  "ia.display.accordion": [
+    "items",
+    "style",
+    "unusedSpaceStyle"
+  ],
   "ia.display.alarmjournaltable": [
+    "name",
     "responsive"
   ],
   "ia.display.alarmstatustable": [
     "columns",
-    "filters"
+    "filters",
+    "pager",
+    "responsive",
+    "toolbar"
+  ],
+  "ia.display.audio": [
+    "display",
+    "source",
+    "style"
+  ],
+  "ia.display.barcode": [
+    "type",
+    "value"
+  ],
+  "ia.display.carousel": [
+    "views"
+  ],
+  "ia.display.cylindrical-tank": [
+    "liquidColor",
+    "liquidOpacity",
+    "style",
+    "tankColor",
+    "value",
+    "valueDisplay",
+    "warningThreshold"
+  ],
+  "ia.display.dashboard": [
+    "availableWidgets",
+    "isEditing"
+  ],
+  "ia.display.equipmentschedule": [
+    "addEnabled",
+    "dateRange",
+    "defaultZoom",
+    "deleteEnabled",
+    "downtimeEvents",
+    "items",
+    "moveEnabled",
+    "resizeEnabled",
+    "rowHeight",
+    "scheduledEvents",
+    "selectedEvent"
   ],
   "ia.display.flex-repeater": [
     "alignContent",
@@ -56,6 +167,8 @@
     "direction",
     "elementPosition",
     "elementStyle",
+    "instances",
+    "justify",
     "path",
     "style",
     "useDefaultViewHeight",
@@ -76,22 +189,79 @@
   "ia.display.image": [
     "fit",
     "source",
-    "style"
+    "style",
+    "tint"
   ],
   "ia.display.label": [
     "alignVertical",
+    "path",
     "style",
     "text",
     "textStyle",
     "visible"
   ],
+  "ia.display.led-display": [
+    "backgroundColor",
+    "diodeOffColor",
+    "diodeOnColor",
+    "numberFormat",
+    "style",
+    "value"
+  ],
+  "ia.display.linear-scale": [
+    "fineTicks",
+    "indicators",
+    "labels",
+    "majorTicks",
+    "minValue",
+    "minorTicks",
+    "mirror",
+    "style"
+  ],
+  "ia.display.map": [
+    "attribution",
+    "init",
+    "layers",
+    "style",
+    "zoom"
+  ],
   "ia.display.markdown": [
     "markdown",
     "sectionSpacing",
+    "source",
+    "style"
+  ],
+  "ia.display.moving-analog-indicator": [
+    "desiredHigh",
+    "desiredLow",
+    "highAlarm",
+    "highHighAlarm",
+    "highInterlock",
+    "label",
+    "lowAlarm",
+    "lowInterlock",
+    "lowLowAlarm",
+    "processValue",
+    "setpointValue"
+  ],
+  "ia.display.pdf-viewer": [
+    "page",
+    "pageCount",
+    "source",
     "style"
   ],
   "ia.display.progress": [
     "bar",
+    "max",
+    "min",
+    "style",
+    "track",
+    "value",
+    "valueDisplay"
+  ],
+  "ia.display.sparkline": [
+    "desired",
+    "points",
     "style"
   ],
   "ia.display.table": [
@@ -103,23 +273,37 @@
     "emptyMessage",
     "enableFooterGroups",
     "filter",
+    "footer",
     "footerGroups",
     "minRowHeight",
     "pager",
     "rows",
     "selection",
+    "showHeader",
     "style",
     "virtualized"
   ],
   "ia.display.tag-browse-tree": [
+    "root",
     "selection"
+  ],
+  "ia.display.thermometer": [
+    "intervals",
+    "unit",
+    "value",
+    "valueFontColor"
   ],
   "ia.display.tree": [
     "appearance",
     "branchNodeSelectable",
+    "items",
     "selection",
     "selectionData",
     "style"
+  ],
+  "ia.display.video-player": [
+    "source",
+    "status"
   ],
   "ia.display.view": [
     "loading",
@@ -137,22 +321,36 @@
     "useDefaultViewHeight",
     "useDefaultViewWidth"
   ],
+  "ia.input.barcodescannerinput": [
+    "captureMode",
+    "prefix",
+    "regex",
+    "style",
+    "suffix",
+    "window"
+  ],
   "ia.input.button": [
     "enabled",
+    "events",
+    "icon",
     "image",
+    "justify",
     "primary",
     "style",
     "text",
-    "textStyle"
+    "textStyle",
+    "tooltip"
   ],
   "ia.input.checkbox": [
     "checkedIcon",
     "enabled",
     "indeterminateIcon",
     "inputStyle",
+    "selected",
     "style",
     "text",
     "textPosition",
+    "triState",
     "uncheckedIcon"
   ],
   "ia.input.date-time-input": [
@@ -165,6 +363,12 @@
     "placeholder",
     "style",
     "value"
+  ],
+  "ia.input.date-time-picker": [
+    "format",
+    "formattedValue",
+    "formattedValues",
+    "pickerType"
   ],
   "ia.input.dropdown": [
     "allowCustomOptions",
@@ -180,8 +384,10 @@
     "value"
   ],
   "ia.input.fileupload": [
+    "accept",
     "fileUploadIcon",
     "maxUploads",
+    "style",
     "supportedFileTypes"
   ],
   "ia.input.multi-state-button": [
@@ -190,16 +396,20 @@
     "defaultSelectedStyle",
     "defaultUnselectedStyle",
     "enabled",
+    "endButtonCornerRadius",
     "orientation",
+    "primary",
     "states",
     "style"
   ],
   "ia.input.numeric-entry-field": [
     "align",
     "containerStyle",
+    "enabled",
     "format",
     "inputBounds",
     "mode",
+    "placeholder",
     "spinner",
     "style",
     "tooltipText",
@@ -207,13 +417,46 @@
   ],
   "ia.input.oneshotbutton": [
     "confirm",
+    "enabled",
+    "primary",
     "readyState",
     "setValue",
     "style",
     "writingState"
   ],
+  "ia.input.password-field": [
+    "allowReveal",
+    "enabled",
+    "placeholder"
+  ],
+  "ia.input.radio-group": [
+    "align",
+    "enabled",
+    "justify",
+    "orientation",
+    "radios",
+    "selectedIcon",
+    "textPosition",
+    "unselectedIcon",
+    "value"
+  ],
   "ia.input.signature-pad": [
-    "actionBar"
+    "actionBar",
+    "enabled",
+    "pad"
+  ],
+  "ia.input.slider": [
+    "enabled",
+    "handleColor",
+    "labels",
+    "max",
+    "min",
+    "orientation",
+    "railColor",
+    "step",
+    "style",
+    "trackColor",
+    "value"
   ],
   "ia.input.text-area": [
     "deferUpdates",
@@ -221,6 +464,7 @@
     "placeholder",
     "resize",
     "style",
+    "text",
     "wrap"
   ],
   "ia.input.text-field": [
@@ -229,10 +473,12 @@
     "placeholder",
     "rejectUpdatesWhileFocused",
     "spellcheck",
-    "style"
+    "style",
+    "text"
   ],
   "ia.input.toggle-switch": [
     "color",
+    "enabled",
     "label",
     "selected",
     "style"
@@ -242,6 +488,12 @@
     "items",
     "style"
   ],
+  "ia.navigation.link": [
+    "style",
+    "target",
+    "text",
+    "url"
+  ],
   "ia.navigation.menutree": [
     "backActionStyle",
     "backActionText",
@@ -249,5 +501,65 @@
     "itemStyle",
     "items",
     "style"
+  ],
+  "ia.reporting.report-viewer": [
+    "page",
+    "pageCount",
+    "source"
+  ],
+  "ia.shapes.svg": [
+    "elements",
+    "preserveAspectRatio",
+    "style",
+    "viewBox"
+  ],
+  "ia.symbol.motor": [
+    "animated",
+    "animationSpeed",
+    "appearance",
+    "feet",
+    "label",
+    "orientation",
+    "style",
+    "value"
+  ],
+  "ia.symbol.pump": [
+    "animated",
+    "animationSpeed",
+    "appearance",
+    "label",
+    "state",
+    "style",
+    "value"
+  ],
+  "ia.symbol.sensor": [
+    "animated",
+    "animationSpeed",
+    "label",
+    "orientation",
+    "style",
+    "value"
+  ],
+  "ia.symbol.valve": [
+    "animated",
+    "appearance",
+    "label",
+    "reverseFlow",
+    "state",
+    "style",
+    "value"
+  ],
+  "ia.symbol.vessel": [
+    "animated",
+    "animationSpeed",
+    "appearance",
+    "bottom",
+    "displayAgitator",
+    "label",
+    "liquidColor",
+    "liquidWarningColor",
+    "state",
+    "style",
+    "value"
   ]
 }
