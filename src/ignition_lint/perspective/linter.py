@@ -376,7 +376,8 @@ class IgnitionPerspectiveLinter:
                 key in component for key in ("position", "propConfig", "events")
             ) or bool(props_without_direction)
 
-            if len(children) == 1 and not has_wrapper_behavior:
+            is_root_component = component_path == "root.root"
+            if len(children) == 1 and not has_wrapper_behavior and not is_root_component:
                 self.issues.append(
                     LintIssue(
                         severity=LintSeverity.STYLE,

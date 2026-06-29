@@ -563,7 +563,7 @@ def test_styled_single_child_flex_is_not_flagged():
     assert "SINGLE_CHILD_FLEX" not in {i.code for i in issues}
 
 
-def test_empty_single_child_flex_is_flagged():
+def test_root_single_child_flex_is_not_flagged():
     issues = _lint_view(
         {
             "custom": {},
@@ -573,6 +573,38 @@ def test_empty_single_child_flex_is_flagged():
                 "props": {"direction": "row"},
                 "children": [
                     {"type": "ia.display.label", "meta": {"name": "StatusLabel"}}
+                ],
+            },
+        }
+    )
+
+    assert "SINGLE_CHILD_FLEX" not in {i.code for i in issues}
+
+
+def test_empty_nested_single_child_flex_is_flagged():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "props": {"direction": "row"},
+                "children": [
+                    {
+                        "type": "ia.container.flex",
+                        "meta": {"name": "Wrapper"},
+                        "props": {"direction": "row"},
+                        "children": [
+                            {
+                                "type": "ia.display.label",
+                                "meta": {"name": "StatusLabel"},
+                            }
+                        ],
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "OtherStatusLabel"},
+                    },
                 ],
             },
         }
