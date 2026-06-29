@@ -23,11 +23,11 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from jsonschema import ValidationError, validate
+    from jsonschema import ValidationError, validators
 
     JSONSCHEMA_AVAILABLE = True
 except ImportError:  # pragma: no cover - optional dependency
-    validate = None  # type: ignore[var-annotated]
+    validators = None  # type: ignore[assignment]
     JSONSCHEMA_AVAILABLE = False
 
     class ValidationError(Exception):
@@ -51,8 +51,9 @@ class IgnitionPerspectiveLinter:
             schema_path = Path(schema_path)
 
         self.schema_path = schema_path
-        self.jsonschema_available = JSONSCHEMA_AVAILABLE and validate is not None
+        self.jsonschema_available = JSONSCHEMA_AVAILABLE and validators is not None
         self.schema = self._load_schema(schema_path)
+        self.schema_validator = self._build_schema_validator()
         self.issues: list[LintIssue] = []
         self.component_stats = {
             "total_files": 0,
@@ -83,6 +84,15 @@ class IgnitionPerspectiveLinter:
             raise FileNotFoundError(f"Schema file not found: {schema_path}") from e
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in schema file: {schema_path}: {e}") from e
+
+    def _build_schema_validator(self):
+        """Compile the component schema once for reuse across components."""
+        if not self.jsonschema_available or validators is None:
+            return None
+
+        validator_cls = validators.validator_for(self.schema)
+        validator_cls.check_schema(self.schema)
+        return validator_cls(self.schema)
 
     def _extract_known_props(self) -> frozenset:
         """Extract known property names from the loaded component schema.
@@ -226,7 +236,7 @@ class IgnitionPerspectiveLinter:
         self, component: dict, file_path: str, component_path: str
     ) -> bool:
         """Validate a component against the schema."""
-        if not self.jsonschema_available or validate is None:
+        if not self.jsonschema_available or self.schema_validator is None:
             if file_path not in self._missing_schema_files:
                 self._missing_schema_files.add(file_path)
                 self.issues.append(
@@ -243,7 +253,7 @@ class IgnitionPerspectiveLinter:
             return True
 
         try:
-            validate(instance=component, schema=self.schema)
+            self.schema_validator.validate(component)
             return True
         except ValidationError as e:
             self.issues.append(
@@ -377,7 +387,11 @@ class IgnitionPerspectiveLinter:
             ) or bool(props_without_direction)
 
             is_root_component = component_path == "root.root"
-            if len(children) == 1 and not has_wrapper_behavior and not is_root_component:
+            if (
+                len(children) == 1
+                and not has_wrapper_behavior
+                and not is_root_component
+            ):
                 self.issues.append(
                     LintIssue(
                         severity=LintSeverity.STYLE,

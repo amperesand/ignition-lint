@@ -208,6 +208,49 @@ class TestUnusedProperties:
 
 
 class TestUnknownPropValidation:
+    def test_schema_validator_is_reused_for_components(self, monkeypatch):
+        calls = {"check_schema": 0, "init": 0, "validate": 0}
+
+        class CountingValidator:
+            @classmethod
+            def check_schema(cls, schema):
+                calls["check_schema"] += 1
+
+            def __init__(self, schema):
+                calls["init"] += 1
+
+            def validate(self, instance):
+                calls["validate"] += 1
+
+        monkeypatch.setattr(
+            "ignition_lint.perspective.linter.validators.validator_for",
+            lambda schema: CountingValidator,
+        )
+
+        view = {
+            "custom": {},
+            "root": {
+                "type": "ia.container.flex",
+                "meta": {"name": "Root"},
+                "children": [
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "LabelOne"},
+                        "props": {"text": "One"},
+                    },
+                    {
+                        "type": "ia.display.label",
+                        "meta": {"name": "LabelTwo"},
+                        "props": {"text": "Two"},
+                    },
+                ],
+            },
+        }
+
+        _lint_view(view)
+
+        assert calls == {"check_schema": 1, "init": 1, "validate": 3}
+
     def test_unknown_prop_flagged(self):
         view = {
             "custom": {},
