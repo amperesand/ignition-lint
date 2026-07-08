@@ -225,13 +225,29 @@ def test_robust_schema_accepts_gateway_component_types_and_null_scripts():
     )
 
 
-def test_schema_validation_drift_is_warning_not_ci_error():
+def test_custom_module_component_ids_do_not_create_schema_warnings():
     issues = _lint_view(
         {
             "custom": {},
             "root": {
-                "type": "ia.vendor.custom-widget",
+                "type": "com.vendor.custom-widget",
                 "meta": {"name": "VendorWidget"},
+                "props": {"moduleSpecific": True},
+            },
+        }
+    )
+
+    schema_issues = [i for i in issues if i.code == "SCHEMA_VALIDATION"]
+    assert not schema_issues
+
+
+def test_invalid_core_ia_component_schema_drift_is_warning_not_ci_error():
+    issues = _lint_view(
+        {
+            "custom": {},
+            "root": {
+                "type": "ia.invalid.custom-widget",
+                "meta": {"name": "InvalidCoreWidget"},
                 "props": {"moduleSpecific": True},
             },
         }
