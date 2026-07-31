@@ -106,6 +106,12 @@ def test_case_is_a_known_ignition_expression_function():
     assert "EXPR_UNKNOWN_FUNCTION" not in _expression_codes(expression)
 
 
+def test_to_millis_is_a_known_ignition_expression_function():
+    expression = "toMillis(now(250))"
+
+    assert "EXPR_UNKNOWN_FUNCTION" not in _expression_codes(expression)
+
+
 def test_ignition_color_expression_functions_are_known():
     expression = "gradient({this.custom.temp}, 55, 100, color(196,227,236), darker(color(245,196,194)))"
 
