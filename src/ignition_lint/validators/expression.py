@@ -84,6 +84,7 @@ KNOWN_EXPRESSION_FUNCTIONS = frozenset(
         "secondsBetween",
         "setTime",
         "toDate",
+        "toMillis",
         "weeksBetween",
         "yearsBetween",
         # Logic / Comparison
