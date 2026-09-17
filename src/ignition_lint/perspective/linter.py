@@ -297,6 +297,27 @@ class IgnitionPerspectiveLinter:
                         )
                     )
 
+        # ia.display.image `fit` is an object ({"mode": "contain"}). A bare string
+        # passes JSON and schema checks but Designer rejects it and the image
+        # falls back to its default fit.
+        if (
+            comp_type == "ia.display.image"
+            and isinstance(props, dict)
+            and isinstance(props.get("fit"), str)
+        ):
+            mode = props["fit"]
+            self.issues.append(
+                LintIssue(
+                    severity=LintSeverity.WARNING,
+                    code="INVALID_IMAGE_FIT",
+                    message=f"Image 'fit' must be an object, not the string '{mode}'",
+                    file_path=file_path,
+                    component_path=component_path,
+                    component_type=comp_type,
+                    suggestion=f'Use "fit": {{"mode": "{mode}"}}',
+                )
+            )
+
         # Check for required meta properties
         meta = component.get("meta", {})
         for required_prop in self.best_practices["required_meta_properties"]:

@@ -352,6 +352,24 @@ class TestUnknownPropValidation:
         }
         issues = _lint_view(view)
         assert "UNKNOWN_PROP" not in _codes(issues)
+        assert "INVALID_IMAGE_FIT" not in _codes(issues)
+
+    def test_image_fit_string_flagged(self):
+        """Regression: a bare-string fit passed lint but is invalid in Designer."""
+        from ignition_lint.reporting import LintSeverity
+
+        view = {
+            "custom": {},
+            "root": {
+                "type": "ia.display.image",
+                "meta": {"name": "UnitImage"},
+                "props": {"source": "/images/logo.png", "fit": "contain", "alt": "Logo"},
+            },
+        }
+        issues = [i for i in _lint_view(view) if i.code == "INVALID_IMAGE_FIT"]
+        assert len(issues) == 1
+        assert issues[0].severity == LintSeverity.WARNING
+        assert '{"mode": "contain"}' in issues[0].suggestion
 
     def test_known_props_from_schema(self):
         """Known prop names are derived from the component schema, not hardcoded."""
